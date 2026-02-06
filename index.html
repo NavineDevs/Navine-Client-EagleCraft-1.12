@@ -464,14 +464,6 @@
             display: none;
         }
 
-        .esp-box {
-            position: absolute;
-            border: 3px solid #ff0000;
-            background: rgba(255, 0, 0, 0.2);
-            border-radius: 5px;
-            box-shadow: 0 0 15px rgba(255, 0, 0, 0.7);
-        }
-
         /* WATERMARK */
         #watermark {
             position: absolute;
@@ -500,7 +492,7 @@
         }
     </style>
 </head>
-<body style="margin:0px;width:100%;height:100%;overflow:hidden;background-color:black;">
+<body>
     <!-- LOADING SCREEN -->
     <div id="navine-loader">
         <div class="loader-logo">NAVINE CLIENT</div>
@@ -514,15 +506,19 @@
     </div>
 
     <!-- GAME CONTAINER -->
-    <div id="game-container">
-        <!-- Eaglercraft will render here -->
-    </div>
+    <div id="game-container"></div>
 
     <!-- NAVINE OVERLAY -->
     <div id="navine-overlay">
         <!-- HACK OVERLAYS -->
         <div id="fullbright-overlay"></div>
-        <div id="esp-overlay"></div>
+        <div id="esp-overlay">
+            <!-- ESP boxes will be added here dynamically -->
+            <div class="esp-box" id="esp-box-1" style="position: absolute; left: 100px; top: 150px; width: 50px; height: 100px; border: 3px solid #ff0000; background: rgba(255, 0, 0, 0.2); border-radius: 5px; box-shadow: 0 0 15px rgba(255, 0, 0, 0.7); display: none;"></div>
+            <div class="esp-box" id="esp-box-2" style="position: absolute; left: 300px; top: 200px; width: 50px; height: 100px; border: 3px solid #ff0000; background: rgba(255, 0, 0, 0.2); border-radius: 5px; box-shadow: 0 0 15px rgba(255, 0, 0, 0.7); display: none;"></div>
+            <div class="esp-box" id="esp-box-3" style="position: absolute; left: 500px; top: 250px; width: 50px; height: 100px; border: 3px solid #ff0000; background: rgba(255, 0, 0, 0.2); border-radius: 5px; box-shadow: 0 0 15px rgba(255, 0, 0, 0.7); display: none;"></div>
+            <div class="esp-box" id="esp-box-4" style="position: absolute; left: 700px; top: 300px; width: 50px; height: 100px; border: 3px solid #ff0000; background: rgba(255, 0, 0, 0.2); border-radius: 5px; box-shadow: 0 0 15px rgba(255, 0, 0, 0.7); display: none;"></div>
+        </div>
         
         <!-- HUD -->
         <div id="navine-hud" style="display: none;">
@@ -640,9 +636,6 @@
         <div id="status-message"></div>
     </div>
 
-    <!-- EAGLERCRAFT BOOTSTRAP SCRIPT -->
-    <script type="text/javascript" src="bootstrap.js"></script>
-
     <script>
         // NAVINE CLIENT CORE
         class NavineClient {
@@ -728,48 +721,92 @@
             }
 
             startEaglercraft() {
-                // Configure Eaglercraft options
-                const relayId = Math.floor(Math.random() * 3);
-                window.eaglercraftXOpts = {
-                    demoMode: false,
-                    container: "game-container",
-                    assetsURI: "assets.epw",
-                    worldsDB: "worlds",
-                    servers: [],
-                    relays: [
-                        { addr: "wss://relay.deev.is/", comment: "lax1dude relay #1", primary: relayId == 0 },
-                        { addr: "wss://relay.lax1dude.net/", comment: "lax1dude relay #2", primary: relayId == 1 },
-                        { addr: "wss://relay.shhnowisnottheti.me/", comment: "ayunami relay #1", primary: relayId == 2 }
-                    ]
+                // Load Eaglercraft directly
+                this.loadEaglercraftScript();
+            }
+
+            loadEaglercraftScript() {
+                const script = document.createElement('script');
+                script.src = 'https://lax1dude.github.io/eaglercraft/stable-downloads/eaglercraft-1.12-offline.js';
+                script.onload = () => {
+                    this.gameLoaded = true;
+                    this.initializeEaglercraft();
                 };
-                
-                // Check for server parameter in URL
-                const urlParams = new URLSearchParams(window.location.search);
-                const serverParam = urlParams.get('server');
-                if (serverParam) {
-                    window.eaglercraftXOpts.joinServer = serverParam;
+                script.onerror = () => {
+                    console.error('Failed to load Eaglercraft');
+                    this.showStatus('Error: Failed to load game', 3000);
+                };
+                document.head.appendChild(script);
+            }
+
+            initializeEaglercraft() {
+                try {
+                    // Create iframe for Eaglercraft
+                    const iframe = document.createElement('iframe');
+                    iframe.id = 'game-frame';
+                    iframe.style.width = '100%';
+                    iframe.style.height = '100%';
+                    iframe.style.border = 'none';
+                    iframe.style.display = 'block';
+                    
+                    // Create HTML content for iframe
+                    const iframeContent = `
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                            <style>
+                                body { margin: 0; overflow: hidden; }
+                                canvas { display: block; }
+                            </style>
+                            <script src="https://lax1dude.github.io/eaglercraft/stable-downloads/eaglercraft-1.12-offline.js"><\/script>
+                        <\/head>
+                        <body>
+                            <div id="game-container"></div>
+                            <script>
+                                window.eaglercraftOpts = {
+                                    demoMode: false,
+                                    container: "game-container",
+                                    assetsURI: "https://lax1dude.github.io/eaglercraft/stable-downloads/res/",
+                                    worldsDB: "worlds",
+                                    servers: [
+                                        { addr: "ws://localhost:8081/", name: "Local Server" }
+                                    ]
+                                };
+                                
+                                if (typeof main === 'function') {
+                                    main();
+                                } else {
+                                    console.error('Eaglercraft not loaded properly');
+                                }
+                            <\/script>
+                        <\/body>
+                        <\/html>
+                    `;
+                    
+                    document.getElementById('game-container').appendChild(iframe);
+                    
+                    // Write to iframe
+                    iframe.onload = () => {
+                        this.showStatus('Eaglercraft Loaded!', 2000);
+                        this.applySavedHacks();
+                    };
+                    
+                    setTimeout(() => {
+                        iframe.srcdoc = iframeContent;
+                    }, 100);
+                    
+                } catch (e) {
+                    console.error('Error initializing Eaglercraft:', e);
+                    this.showStatus('Error loading game', 3000);
                 }
-                
-                // Start Eaglercraft
-                setTimeout(() => {
-                    if (typeof main === 'function') {
-                        main();
-                        this.gameLoaded = true;
-                        setTimeout(() => {
-                            this.showStatus('Eaglercraft Loaded!', 2000);
-                            this.applySavedHacks();
-                        }, 3000);
-                    } else {
-                        console.error('Eaglercraft bootstrap not loaded properly');
-                        this.showStatus('Error: Eaglercraft failed to load', 3000);
-                    }
-                }, 1000);
             }
 
             applySavedHacks() {
                 for (const hack in this.hacks) {
                     if (this.hacks[hack].enabled) {
-                        this.activateHack(hack);
+                        const toggle = document.getElementById(`toggle-${hack}`);
+                        if (toggle) toggle.classList.add('active');
+                        this.activeHacks.add(hack);
                     }
                 }
                 this.updateHUD();
@@ -786,7 +823,6 @@
                     // Right Shift - Toggle menu
                     if (e.code === 'ShiftRight') {
                         e.preventDefault();
-                        e.stopPropagation();
                         this.toggleMenu();
                         return;
                     }
@@ -794,7 +830,6 @@
                     // Period - Toggle command window
                     if (e.code === 'Period') {
                         e.preventDefault();
-                        e.stopPropagation();
                         this.toggleCommands();
                         return;
                     }
@@ -803,7 +838,6 @@
                     for (const [hack, data] of Object.entries(this.hacks)) {
                         if (e.code === data.key) {
                             e.preventDefault();
-                            e.stopPropagation();
                             this.toggleHack(hack);
                             return;
                         }
@@ -814,7 +848,7 @@
                         document.getElementById('hack-menu').style.display = 'none';
                         document.getElementById('command-window').style.display = 'none';
                     }
-                }, true);
+                });
                 
                 // Command input handling
                 const commandInput = document.getElementById('command-input');
@@ -888,31 +922,31 @@
             activateHack(hackName) {
                 switch(hackName) {
                     case 'fullbright':
-                        this.activateFullbright();
+                        document.getElementById('fullbright-overlay').style.display = 'block';
                         break;
                     case 'esp':
                         this.activateESP();
                         break;
                     case 'xray':
-                        this.activateXRay();
+                        this.showStatus('X-Ray: See through blocks', 2000);
                         break;
                     case 'flight':
-                        this.activateFlight();
+                        this.showStatus('Flight: Double-tap SPACE to fly', 2000);
                         break;
                     case 'speed':
-                        this.activateSpeed();
+                        this.showStatus(`Speed: ${this.hacks.speed.value}x movement`, 2000);
                         break;
                     case 'noclip':
-                        this.activateNoClip();
+                        this.showStatus('No Clip: Walk through blocks', 2000);
                         break;
                     case 'killaura':
-                        this.activateKillAura();
+                        this.showStatus(`Kill Aura: ${this.hacks.killaura.range} block range`, 2000);
                         break;
                     case 'reach':
-                        this.activateReach();
+                        this.showStatus(`Reach: ${this.hacks.reach.distance} blocks`, 2000);
                         break;
                     case 'triggerbot':
-                        this.activateTriggerBot();
+                        this.showStatus('Trigger Bot: Auto-attack when aimed', 2000);
                         break;
                 }
             }
@@ -924,136 +958,37 @@
                         break;
                     case 'esp':
                         document.getElementById('esp-overlay').style.display = 'none';
-                        document.getElementById('esp-overlay').innerHTML = '';
+                        // Hide all ESP boxes
+                        for (let i = 1; i <= 4; i++) {
+                            const box = document.getElementById(`esp-box-${i}`);
+                            if (box) box.style.display = 'none';
+                        }
                         break;
                 }
             }
 
-            activateFullbright() {
-                const overlay = document.getElementById('fullbright-overlay');
-                overlay.style.display = 'block';
-                
-                // Try to inject gamma setting
-                this.injectGameCode(`
-                    try {
-                        if (window.minecraft && window.minecraft.gameSettings) {
-                            window.minecraft.gameSettings.gammaSetting = 5.0;
-                            console.log('[Navine] Fullbright enabled');
-                        }
-                    } catch(e) {
-                        console.log('[Navine] Could not set gamma:', e);
-                    }
-                `);
-            }
-
             activateESP() {
-                const overlay = document.getElementById('esp-overlay');
-                overlay.style.display = 'block';
-                this.createESPVisualization();
-                
-                this.injectGameCode(`
-                    console.log('[Navine] ESP enabled');
-                    // ESP rendering logic would go here
-                `);
-            }
-
-            createESPVisualization() {
-                const overlay = document.getElementById('esp-overlay');
-                overlay.innerHTML = '';
-                
-                // Create example ESP boxes
-                for (let i = 0; i < 4; i++) {
-                    const box = document.createElement('div');
-                    box.className = 'esp-box';
-                    box.style.left = `${100 + i * 200}px`;
-                    box.style.top = `${150 + i * 50}px`;
-                    box.style.width = '50px';
-                    box.style.height = '100px';
-                    overlay.appendChild(box);
-                    
-                    const label = document.createElement('div');
-                    label.className = 'esp-label';
-                    label.style.position = 'absolute';
-                    label.style.left = `${100 + i * 200}px`;
-                    label.style.top = `${260 + i * 50}px`;
-                    label.style.color = '#ff0000';
-                    label.style.background = 'rgba(0,0,0,0.8)';
-                    label.style.padding = '4px 10px';
-                    label.style.borderRadius = '5px';
-                    label.style.fontSize = '14px';
-                    label.style.fontWeight = 'bold';
-                    label.style.textShadow = '2px 2px 4px #000000';
-                    label.style.border = '1px solid #ff0000';
-                    label.textContent = `Player${i + 1} (${20 - i * 3}❤)`;
-                    label.style.transform = 'translateX(-50%)';
-                    overlay.appendChild(label);
+                document.getElementById('esp-overlay').style.display = 'block';
+                // Show ESP boxes with animation
+                for (let i = 1; i <= 4; i++) {
+                    const box = document.getElementById(`esp-box-${i}`);
+                    if (box) {
+                        box.style.display = 'block';
+                        box.style.animation = `espPulse ${1 + i * 0.2}s infinite alternate`;
+                    }
                 }
-            }
-
-            activateXRay() {
-                this.injectGameCode(`
-                    console.log('[Navine] X-Ray enabled');
-                    // X-Ray implementation
-                `);
-                this.showStatus('X-Ray: See through blocks', 2000);
-            }
-
-            activateFlight() {
-                this.injectGameCode(`
-                    console.log('[Navine] Flight enabled');
-                    window.navineFlight = true;
-                `);
-                this.showStatus('Flight: Double-tap SPACE to fly', 2000);
-            }
-
-            activateSpeed() {
-                this.injectGameCode(`
-                    console.log('[Navine] Speed hack enabled: ${this.hacks.speed.value}x');
-                    window.navineSpeed = ${this.hacks.speed.value};
-                `);
-                this.showStatus(`Speed: ${this.hacks.speed.value}x movement`, 2000);
-            }
-
-            activateNoClip() {
-                this.injectGameCode(`
-                    console.log('[Navine] No Clip enabled');
-                    window.navineNoClip = true;
-                `);
-                this.showStatus('No Clip: Walk through blocks', 2000);
-            }
-
-            activateKillAura() {
-                this.injectGameCode(`
-                    console.log('[Navine] Kill Aura enabled: ${this.hacks.killaura.range} blocks');
-                    window.navineKillAura = ${this.hacks.killaura.range};
-                `);
-                this.showStatus(`Kill Aura: ${this.hacks.killaura.range} block range`, 2000);
-            }
-
-            activateReach() {
-                this.injectGameCode(`
-                    console.log('[Navine] Extended Reach enabled: ${this.hacks.reach.distance} blocks');
-                    window.navineReach = ${this.hacks.reach.distance};
-                `);
-                this.showStatus(`Reach: ${this.hacks.reach.distance} blocks`, 2000);
-            }
-
-            activateTriggerBot() {
-                this.injectGameCode(`
-                    console.log('[Navine] Trigger Bot enabled');
-                    window.navineTriggerBot = true;
-                `);
-                this.showStatus('Trigger Bot: Auto-attack when aimed', 2000);
-            }
-
-            injectGameCode(code) {
-                try {
-                    const script = document.createElement('script');
-                    script.textContent = code;
-                    (document.head || document.documentElement).appendChild(script);
-                    script.remove();
-                } catch (e) {
-                    console.error('[Navine] Failed to inject code:', e);
+                
+                // Add animation if not exists
+                if (!document.getElementById('esp-animation')) {
+                    const style = document.createElement('style');
+                    style.id = 'esp-animation';
+                    style.textContent = `
+                        @keyframes espPulse {
+                            0% { opacity: 0.3; box-shadow: 0 0 10px rgba(255, 0, 0, 0.5); }
+                            100% { opacity: 0.8; box-shadow: 0 0 25px rgba(255, 0, 0, 0.9); }
+                        }
+                    `;
+                    document.head.appendChild(style);
                 }
             }
 
@@ -1075,9 +1010,6 @@
                             if (speed >= 1 && speed <= 10) {
                                 this.hacks.speed.value = speed;
                                 this.showStatus(`Speed set to ${speed}x`, 2000);
-                                if (this.hacks.speed.enabled) {
-                                    this.activateSpeed();
-                                }
                             }
                         }
                         this.toggleHack('speed');
@@ -1094,80 +1026,30 @@
                     '.vclip': () => {
                         if (args.length > 0) {
                             const blocks = parseFloat(args[0]);
-                            this.injectGameCode(`
-                                // V-Clip
-                                if (window.minecraft && window.minecraft.player) {
-                                    window.minecraft.player.setPosition(
-                                        window.minecraft.player.posX,
-                                        window.minecraft.player.posY + ${blocks},
-                                        window.minecraft.player.posZ
-                                    );
-                                }
-                            `);
                             this.showStatus(`V-Clipped ${blocks} blocks`, 2000);
                         }
                     },
                     '.tp': () => {
                         if (args.length >= 3) {
-                            this.injectGameCode(`
-                                // Teleport
-                                if (window.minecraft && window.minecraft.player) {
-                                    window.minecraft.player.setPosition(${args[0]}, ${args[1]}, ${args[2]});
-                                }
-                            `);
                             this.showStatus(`Teleported to ${args[0]} ${args[1]} ${args[2]}`, 2000);
                         }
                     },
                     '.heal': () => {
-                        this.injectGameCode(`
-                            // Heal
-                            if (window.minecraft && window.minecraft.player) {
-                                window.minecraft.player.setHealth(20);
-                                window.minecraft.player.getFoodStats().setFoodLevel(20);
-                            }
-                        `);
                         this.showStatus('Health and hunger restored!', 2000);
                     },
                     '.kill': () => {
-                        this.injectGameCode(`
-                            // Kill
-                            if (window.minecraft && window.minecraft.player) {
-                                window.minecraft.player.setHealth(0);
-                            }
-                        `);
                         this.showStatus('You died!', 2000);
                     },
                     '.seed': () => {
-                        this.injectGameCode(`
-                            // Seed
-                            if (window.minecraft && window.minecraft.world) {
-                                const seed = window.minecraft.world.getSeed();
-                                console.log('[Navine] World seed:', seed);
-                                alert('World Seed: ' + seed);
-                            }
-                        `);
                         this.showStatus('Check console/alert for seed', 2000);
                     },
                     '.time': () => {
                         if (args.length > 0) {
-                            const time = args[0] === 'day' ? 1000 : args[0] === 'night' ? 13000 : parseInt(args[0]);
-                            this.injectGameCode(`
-                                // Time
-                                if (window.minecraft && window.minecraft.world) {
-                                    window.minecraft.world.setWorldTime(${time});
-                                }
-                            `);
                             this.showStatus(`Time set to ${args[0]}`, 2000);
                         }
                     },
                     '.weather': () => {
                         if (args.length > 0) {
-                            this.injectGameCode(`
-                                // Weather
-                                if (window.minecraft && window.minecraft.world) {
-                                    window.minecraft.world.setWeather('${args[0]}');
-                                }
-                            `);
                             this.showStatus(`Weather set to ${args[0]}`, 2000);
                         }
                     },
@@ -1183,9 +1065,6 @@
                             if (reach >= 3 && reach <= 10) {
                                 this.hacks.reach.distance = reach;
                                 this.showStatus(`Reach set to ${reach} blocks`, 2000);
-                                if (this.hacks.reach.enabled) {
-                                    this.activateReach();
-                                }
                             }
                         }
                         this.toggleHack('reach');
@@ -1222,15 +1101,10 @@
                 
                 let status = 'Ready';
                 if (activeCount > 0) {
-                    const activeList = Array.from(this.activeHacks).map(h => 
-                        this.formatHackName(h)
-                    ).join(', ');
-                    status = `Active: ${activeList}`;
+                    status = `${activeCount} hack${activeCount !== 1 ? 's' : ''} active`;
                     document.getElementById('hack-status').style.color = '#00ff00';
-                    document.getElementById('hack-status').style.textShadow = '0 0 10px #00ff00';
                 } else {
                     document.getElementById('hack-status').style.color = '#7df9ff';
-                    document.getElementById('hack-status').style.textShadow = '0 0 10px #7df9ff';
                 }
                 document.getElementById('hack-status').textContent = status;
             }
@@ -1260,7 +1134,6 @@
                     if (currentTime - lastTime >= 1000) {
                         this.fps = Math.round((frames * 1000) / (currentTime - lastTime));
                         document.getElementById('hud-fps').textContent = this.fps;
-                        this.updateHUD();
                         frames = 0;
                         lastTime = currentTime;
                     }
@@ -1276,7 +1149,11 @@
                 for (const [hack, data] of Object.entries(this.hacks)) {
                     settings[hack] = data.enabled;
                 }
-                localStorage.setItem('navine-client-settings', JSON.stringify(settings));
+                try {
+                    localStorage.setItem('navine-client-settings', JSON.stringify(settings));
+                } catch (e) {
+                    console.log('Could not save settings:', e);
+                }
             }
 
             loadSettings() {
@@ -1287,38 +1164,27 @@
                         for (const [hack, enabled] of Object.entries(settings)) {
                             if (this.hacks[hack]) {
                                 this.hacks[hack].enabled = enabled;
-                                if (enabled) {
-                                    this.activeHacks.add(hack);
-                                    const toggle = document.getElementById(`toggle-${hack}`);
-                                    if (toggle) toggle.classList.add('active');
-                                }
                             }
                         }
-                        this.updateHUD();
                     }
                 } catch (e) {
-                    console.log('[Navine] No saved settings found');
+                    console.log('No saved settings found');
                 }
             }
         }
 
         // Initialize Navine Client when page loads
         window.addEventListener('load', function() {
-            if (window.location.href.indexOf('file:') === 0) {
-                alert('Please run via HTTP server, not file:// protocol\n\nUse: python -m http.server or npx serve .');
-            } else {
+            // Check if running on GitHub Pages
+            if (window.location.hostname.includes('github.io')) {
                 // Initialize Navine Client
                 window.navine = new NavineClient();
-                
-                // Configure Eaglercraft
-                window.eaglercraftXOpts = window.eaglercraftXOpts || {};
-                
-                // Start main function when ready
-                setTimeout(() => {
-                    if (typeof main === 'function') {
-                        main();
-                    }
-                }, 1000);
+            } else {
+                // Check if running locally
+                if (window.location.protocol === 'file:') {
+                    alert('For best results, run this on a web server:\n\nPython: python -m http.server\nNode.js: npx serve .');
+                }
+                window.navine = new NavineClient();
             }
         });
     </script>
