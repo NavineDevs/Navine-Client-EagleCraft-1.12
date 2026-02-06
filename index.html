@@ -99,9 +99,10 @@
             position: relative;
         }
 
-        #game-canvas {
+        #game-frame {
             width: 100%;
             height: 100%;
+            border: none;
             display: block;
         }
 
@@ -506,7 +507,7 @@
 
     <!-- GAME CONTAINER -->
     <div id="game-container">
-        <canvas id="game-canvas"></canvas>
+        <iframe id="game-frame" allowfullscreen></iframe>
     </div>
 
     <!-- NAVINE OVERLAY -->
@@ -631,9 +632,6 @@
         <div id="status-message"></div>
     </div>
 
-    <!-- EAGLERCRAFT SCRIPT -->
-    <script src="https://cdn.jsdelivr.net/gh/LAX1DUDE/eaglercraft/stable-downloads/eaglercraft-1.12-offline.js"></script>
-    
     <script>
         // NAVINE CLIENT CORE
         class NavineClient {
@@ -668,7 +666,7 @@
                 // Start Eaglercraft after loading
                 setTimeout(() => {
                     this.startEaglercraft();
-                }, 1000);
+                }, 1500);
             }
 
             showLoading() {
@@ -722,54 +720,94 @@
 
             startEaglercraft() {
                 try {
-                    // Configure Eaglercraft options
-                    window.eaglercraftOpts = {
-                        demoMode: false,
-                        container: "game-container",
-                        assetsURI: "https://cdn.jsdelivr.net/gh/LAX1DUDE/eaglercraft/stable-downloads/res/",
-                        worldsDB: "worlds",
-                        servers: [
-                            { addr: "ws://localhost:8081/", name: "Local Server" },
-                            { addr: "wss://mc.ayunami2000.net/", name: "Ayunami Public Server" }
-                        ],
-                        relays: [
-                            { addr: "wss://relay.deev.is/", comment: "lax1dude relay #1" },
-                            { addr: "wss://relay.lax1dude.net/", comment: "lax1dude relay #2" },
-                            { addr: "wss://relay.shhnowisnottheti.me/", comment: "ayunami relay #1" }
-                        ]
+                    // Load Eaglercraft from working source
+                    const iframe = document.getElementById('game-frame');
+                    
+                    // Create Eaglercraft HTML with embedded scripts
+                    const eaglercraftHTML = `
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                            <meta charset="UTF-8">
+                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                            <title>Eaglercraft</title>
+                            <style>
+                                body { margin: 0; padding: 0; overflow: hidden; background: #000; }
+                                canvas { display: block; }
+                            </style>
+                            <script>
+                                // Eaglercraft configuration
+                                window.eaglercraftOpts = {
+                                    demoMode: false,
+                                    container: "game-container",
+                                    assetsURI: "https://cdn.jsdelivr.net/gh/lax1dude/eaglercraft/stable-downloads/res/",
+                                    worldsDB: "worlds",
+                                    servers: [
+                                        { addr: "ws://localhost:8081/", name: "Local Server" },
+                                        { addr: "wss://mc.ayunami2000.net/", name: "Ayunami Public Server" }
+                                    ],
+                                    relays: [
+                                        { addr: "wss://relay.deev.is/", comment: "lax1dude relay #1" },
+                                        { addr: "wss://relay.lax1dude.net/", comment: "lax1dude relay #2" },
+                                        { addr: "wss://relay.shhnowisnottheti.me/", comment: "ayunami relay #1" }
+                                    ]
+                                };
+                                
+                                // Load Eaglercraft script
+                                function loadEaglercraft() {
+                                    const script = document.createElement('script');
+                                    script.src = 'https://cdn.jsdelivr.net/gh/lax1dude/eaglercraft/stable-downloads/eaglercraft-1.12-offline.js';
+                                    script.onload = function() {
+                                        if (typeof main === 'function') {
+                                            main();
+                                            console.log('Eaglercraft loaded successfully');
+                                            // Notify parent window
+                                            if (window.parent && window.parent.navine) {
+                                                window.parent.navine.gameLoaded = true;
+                                                window.parent.navine.showStatus('Eaglercraft Loaded!', 2000);
+                                                window.parent.navine.applySavedHacks();
+                                            }
+                                        }
+                                    };
+                                    script.onerror = function() {
+                                        console.error('Failed to load Eaglercraft');
+                                        document.body.innerHTML = '<div style="color: white; padding: 20px; text-align: center;">Failed to load Eaglercraft. Please check console.</div>';
+                                    };
+                                    document.head.appendChild(script);
+                                }
+                                
+                                // Start loading when page is ready
+                                window.addEventListener('load', loadEaglercraft);
+                            <\/script>
+                        <\/head>
+                        <body>
+                            <div id="game-container"></div>
+                        <\/body>
+                        <\/html>
+                    `;
+                    
+                    // Set iframe content
+                    iframe.srcdoc = eaglercraftHTML;
+                    
+                    iframe.onload = () => {
+                        console.log('Eaglercraft iframe loaded');
+                        this.gameLoaded = true;
                     };
                     
-                    // Check for server parameter in URL
-                    const urlParams = new URLSearchParams(window.location.search);
-                    const serverParam = urlParams.get('server');
-                    if (serverParam) {
-                        window.eaglercraftOpts.joinServer = serverParam;
-                    }
-                    
-                    // Check if Eaglercraft is loaded
-                    if (typeof main === 'function') {
-                        main();
-                        this.gameLoaded = true;
-                        setTimeout(() => {
-                            this.showStatus('Eaglercraft Loaded!', 2000);
-                            this.applySavedHacks();
-                        }, 2000);
-                    } else {
-                        console.error('Eaglercraft not loaded properly');
-                        this.showStatus('Error: Eaglercraft failed to load', 3000);
-                        // Fallback: Show manual instructions
-                        document.getElementById('loading-text').innerHTML = `
-                            <div style="text-align: center; color: #7df9ff;">
-                                <p>Eaglercraft failed to load automatically.</p>
-                                <p>Please visit:</p>
-                                <p><a href="https://lax1dude.github.io/eaglercraft/" style="color: #4169e1; text-decoration: underline;" target="_blank">https://lax1dude.github.io/eaglercraft/</a></p>
-                                <p>Then use Navine Client overlay features.</p>
-                            </div>
-                        `;
-                    }
                 } catch (e) {
-                    console.error('Error starting Eaglercraft:', e);
-                    this.showStatus('Error loading game', 3000);
+                    console.error('Error loading Eaglercraft:', e);
+                    this.showStatus('Error: Could not load game', 3000);
+                    // Alternative: Provide direct link
+                    document.getElementById('loading-text').innerHTML = `
+                        <div style="text-align: center; color: #7df9ff; margin-top: 20px;">
+                            <p>Eaglercraft loading issue detected.</p>
+                            <p>Try direct link:</p>
+                            <a href="https://g.eags.us/eaglercraft/1.12/" 
+                               style="color: #4169e1; text-decoration: underline; font-weight: bold;"
+                               target="_blank">Play Eaglercraft 1.12</a>
+                            <p style="margin-top: 10px;">Navine Client overlay will still work on top.</p>
+                        </div>
+                    `;
                 }
             }
 
@@ -937,49 +975,30 @@
             activateESP() {
                 const overlay = document.getElementById('esp-overlay');
                 overlay.style.display = 'block';
-                overlay.innerHTML = '';
                 
                 // Create ESP visualization
-                for (let i = 0; i < 4; i++) {
-                    const box = document.createElement('div');
-                    box.style.position = 'absolute';
-                    box.style.left = `${100 + i * 200}px`;
-                    box.style.top = `${150 + i * 50}px`;
-                    box.style.width = '50px';
-                    box.style.height = '100px';
-                    box.style.border = '2px solid #ff0000';
-                    box.style.background = 'rgba(255, 0, 0, 0.1)';
-                    box.style.borderRadius = '4px';
-                    box.style.boxShadow = '0 0 15px rgba(255, 0, 0, 0.7)';
-                    box.style.animation = `espPulse ${1 + i * 0.2}s infinite alternate`;
-                    overlay.appendChild(box);
+                const espContent = `
+                    <div style="position: absolute; left: 100px; top: 150px; width: 50px; height: 100px; border: 2px solid #ff0000; background: rgba(255, 0, 0, 0.1); border-radius: 4px; box-shadow: 0 0 15px rgba(255, 0, 0, 0.7); animation: espPulse 1s infinite alternate;"></div>
+                    <div style="position: absolute; left: 100px; top: 260px; color: #ff0000; background: rgba(0,0,0,0.8); padding: 2px 8px; border-radius: 3px; font-size: 12px; font-weight: bold; text-shadow: 1px 1px 2px #000; border: 1px solid #ff0000; transform: translateX(-50%);">Player1</div>
                     
-                    const label = document.createElement('div');
-                    label.textContent = `Player${i + 1}`;
-                    label.style.position = 'absolute';
-                    label.style.left = `${100 + i * 200}px`;
-                    label.style.top = `${260 + i * 50}px`;
-                    label.style.color = '#ff0000';
-                    label.style.background = 'rgba(0,0,0,0.8)';
-                    label.style.padding = '2px 8px';
-                    label.style.borderRadius = '3px';
-                    label.style.fontSize = '12px';
-                    label.style.fontWeight = 'bold';
-                    label.style.textShadow = '1px 1px 2px #000';
-                    label.style.border = '1px solid #ff0000';
-                    label.style.transform = 'translateX(-50%)';
-                    overlay.appendChild(label);
-                }
-                
-                // Add animation
-                const style = document.createElement('style');
-                style.textContent = `
-                    @keyframes espPulse {
-                        0% { opacity: 0.3; box-shadow: 0 0 10px rgba(255, 0, 0, 0.5); }
-                        100% { opacity: 0.8; box-shadow: 0 0 25px rgba(255, 0, 0, 0.9); }
-                    }
+                    <div style="position: absolute; left: 300px; top: 200px; width: 50px; height: 100px; border: 2px solid #ff0000; background: rgba(255, 0, 0, 0.1); border-radius: 4px; box-shadow: 0 0 15px rgba(255, 0, 0, 0.7); animation: espPulse 1.2s infinite alternate;"></div>
+                    <div style="position: absolute; left: 300px; top: 310px; color: #ff0000; background: rgba(0,0,0,0.8); padding: 2px 8px; border-radius: 3px; font-size: 12px; font-weight: bold; text-shadow: 1px 1px 2px #000; border: 1px solid #ff0000; transform: translateX(-50%);">Player2</div>
+                    
+                    <div style="position: absolute; left: 500px; top: 250px; width: 50px; height: 100px; border: 2px solid #ff0000; background: rgba(255, 0, 0, 0.1); border-radius: 4px; box-shadow: 0 0 15px rgba(255, 0, 0, 0.7); animation: espPulse 1.4s infinite alternate;"></div>
+                    <div style="position: absolute; left: 500px; top: 360px; color: #ff0000; background: rgba(0,0,0,0.8); padding: 2px 8px; border-radius: 3px; font-size: 12px; font-weight: bold; text-shadow: 1px 1px 2px #000; border: 1px solid #ff0000; transform: translateX(-50%);">Player3</div>
+                    
+                    <div style="position: absolute; left: 700px; top: 300px; width: 50px; height: 100px; border: 2px solid #ff0000; background: rgba(255, 0, 0, 0.1); border-radius: 4px; box-shadow: 0 0 15px rgba(255, 0, 0, 0.7); animation: espPulse 1.6s infinite alternate;"></div>
+                    <div style="position: absolute; left: 700px; top: 410px; color: #ff0000; background: rgba(0,0,0,0.8); padding: 2px 8px; border-radius: 3px; font-size: 12px; font-weight: bold; text-shadow: 1px 1px 2px #000; border: 1px solid #ff0000; transform: translateX(-50%);">Player4</div>
+                    
+                    <style>
+                        @keyframes espPulse {
+                            0% { opacity: 0.3; box-shadow: 0 0 10px rgba(255, 0, 0, 0.5); }
+                            100% { opacity: 0.8; box-shadow: 0 0 25px rgba(255, 0, 0, 0.9); }
+                        }
+                    </style>
                 `;
-                document.head.appendChild(style);
+                
+                overlay.innerHTML = espContent;
             }
 
             executeCommand(cmd) {
