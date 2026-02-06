@@ -68,6 +68,7 @@
             font-size: 18px;
             font-weight: bold;
             text-align: center;
+            transition: all 0.2s;
         }
 
         .menu-btn:hover {
@@ -82,13 +83,12 @@
             position: relative;
         }
 
-        #game-frame {
+        #game-canvas {
             width: 100%;
             height: 100%;
             position: absolute;
             top: 0;
             left: 0;
-            border: none;
             z-index: 1;
         }
 
@@ -232,7 +232,6 @@
             height: 20px;
             background: #7df9ff;
             border-radius: 50%;
-            transition: all 0.3s ease;
         }
 
         .hack-toggle.active::after {
@@ -302,7 +301,6 @@
             height: 100%;
             background: linear-gradient(90deg, #4169e1, #7df9ff);
             width: 0%;
-            transition: width 0.3s ease;
         }
     </style>
 </head>
@@ -327,7 +325,7 @@
     </div>
 
     <div id="game-container">
-        <iframe id="game-frame" src="about:blank"></iframe>
+        <canvas id="game-canvas"></canvas>
         
         <div id="navine-ui">
             <div id="hud">
@@ -338,7 +336,7 @@
                 </div>
                 <div class="hud-stat">
                     <span class="stat-label">HACKS:</span>
-                    <span class="stat-value" id="hud-hacks">0</span>
+                    <span class="stat-value" id="hud-hacks">1</span>
                 </div>
                 <div class="hud-stat">
                     <span class="stat-label">STATUS:</span>
@@ -428,7 +426,7 @@
                 };
 
                 this.activeHacks = new Set(['fullbright']);
-                this.gameWindow = null;
+                this.game = null;
                 this.init();
             }
 
@@ -469,7 +467,7 @@
 
                 this.hacks[hackName].enabled = !this.hacks[hackName].enabled;
 
-                const toggle = document.querySelector(`[data-hack="${hackName}"] .hack-toggle`);
+                const toggle = document.querySelector('[data-hack="' + hackName + '"] .hack-toggle');
                 if (toggle) {
                     toggle.classList.toggle('active');
                 }
@@ -484,49 +482,81 @@
 
                 this.updateHUD();
                 this.saveSettings();
-                this.showStatus(`${hackName.toUpperCase()} ${this.hacks[hackName].enabled ? 'ENABLED' : 'DISABLED'}`);
+                this.showStatus(hackName.toUpperCase() + ' ' + (this.hacks[hackName].enabled ? 'ENABLED' : 'DISABLED'));
             }
 
             activateHack(hackName) {
-                console.log(`Activating ${hackName}`);
+                console.log('Activating hack: ' + hackName);
                 
-                const hackScripts = {
-                    fullbright: `
-                        try {
-                            console.log('Fullbright enabled');
-                        } catch(e) {}
-                    `,
-                    flight: `
-                        try {
-                            console.log('Flight enabled');
-                        } catch(e) {}
-                    `,
-                    speed: `
-                        try {
-                            console.log('Speed enabled');
-                        } catch(e) {}
-                    `
-                };
-
-                if (hackScripts[hackName]) {
-                    this.injectGameCode(hackScripts[hackName]);
+                // Apply hacks directly to the game
+                switch(hackName) {
+                    case 'fullbright':
+                        this.applyFullbright();
+                        break;
+                    case 'flight':
+                        this.applyFlight();
+                        break;
+                    case 'speed':
+                        this.applySpeed();
+                        break;
+                    case 'esp':
+                        this.applyESP();
+                        break;
                 }
             }
 
             deactivateHack(hackName) {
-                console.log(`Deactivating ${hackName}`);
+                console.log('Deactivating hack: ' + hackName);
             }
 
-            injectGameCode(code) {
-                try {
-                    if (this.gameWindow && this.gameWindow.contentWindow) {
-                        const script = document.createElement('script');
-                        script.textContent = code;
-                        this.gameWindow.contentDocument.head.appendChild(script);
-                    }
-                } catch (e) {
-                    console.log('Failed to inject hack:', e);
-                }
+            applyFullbright() {
+                // Create a bright overlay
+                const overlay = document.createElement('div');
+                overlay.id = 'navine-fullbright';
+                overlay.style.cssText = `
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(255, 255, 255, 0.1);
+                    pointer-events: none;
+                    z-index: 10;
+                    display: none;
+                `;
+                document.getElementById('game-container').appendChild(overlay);
+                overlay.style.display = 'block';
+            }
+
+            applyFlight() {
+                // Modify game controls for flight
+                this.modifyControls('flight', true);
+            }
+
+            applySpeed() {
+                // Modify game controls for speed
+                this.modifyControls('speed', true);
+            }
+
+            applyESP() {
+                // Create ESP overlay
+                const espOverlay = document.createElement('div');
+                espOverlay.id = 'navine-esp';
+                espOverlay.style.cssText = `
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    pointer-events: none;
+                    z-index: 5;
+                `;
+                document.getElementById('game-container').appendChild(espOverlay);
+            }
+
+            modifyControls(type, enable) {
+                // This would modify game controls
+                console.log(type + (enable ? ' enabled' : ' disabled'));
             }
 
             toggleMenu() {
@@ -540,7 +570,7 @@
                 
                 let status = 'Ready';
                 if (activeCount > 0) {
-                    status = `${activeCount} Hack${activeCount > 1 ? 's' : ''} Active`;
+                    status = activeCount + ' Hack' + (activeCount > 1 ? 's' : '') + ' Active';
                     document.getElementById('hud-status').style.color = '#00ff00';
                 } else {
                     document.getElementById('hud-status').style.color = '#7df9ff';
@@ -548,12 +578,13 @@
                 document.getElementById('hud-status').textContent = status;
             }
 
-            showStatus(text, duration = 2000) {
+            showStatus(text, duration) {
+                if (!duration) duration = 2000;
                 const status = document.getElementById('status');
                 status.textContent = text;
                 status.style.display = 'block';
                 
-                setTimeout(() => {
+                setTimeout(function() {
                     status.style.display = 'none';
                 }, duration);
             }
@@ -582,8 +613,8 @@
 
             saveSettings() {
                 const settings = {};
-                for (const [hack, data] of Object.entries(this.hacks)) {
-                    settings[hack] = data.enabled;
+                for (const hack in this.hacks) {
+                    settings[hack] = this.hacks[hack].enabled;
                 }
                 localStorage.setItem('navine-client-settings', JSON.stringify(settings));
             }
@@ -593,12 +624,12 @@
                     const saved = localStorage.getItem('navine-client-settings');
                     if (saved) {
                         const settings = JSON.parse(saved);
-                        for (const [hack, enabled] of Object.entries(settings)) {
+                        for (const hack in settings) {
                             if (this.hacks[hack] !== undefined) {
-                                this.hacks[hack].enabled = enabled;
-                                if (enabled) {
+                                this.hacks[hack].enabled = settings[hack];
+                                if (settings[hack]) {
                                     this.activeHacks.add(hack);
-                                    const toggle = document.querySelector(`[data-hack="${hack}"] .hack-toggle`);
+                                    const toggle = document.querySelector('[data-hack="' + hack + '"] .hack-toggle');
                                     if (toggle) toggle.classList.add('active');
                                 }
                             }
@@ -606,20 +637,17 @@
                         this.updateHUD();
                     }
                 } catch (e) {
-                    console.log('Error loading settings:', e);
+                    console.log('Error loading settings: ' + e);
                 }
             }
         }
-
-        // Global Variables
-        let navineClient = null;
 
         // Main Menu Functions
         function startGame(type) {
             document.getElementById('main-menu').style.display = 'none';
             document.getElementById('loading').style.display = 'flex';
             
-            simulateLoading(() => {
+            simulateLoading(function() {
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('game-container').style.display = 'block';
                 loadEaglercraft(type);
@@ -639,9 +667,9 @@
                 'Starting Eaglercraft...'
             ];
             
-            const interval = setInterval(() => {
+            const interval = setInterval(function() {
                 progress += 20;
-                bar.style.width = `${progress}%`;
+                bar.style.width = progress + '%';
                 
                 if (progress <= 100) {
                     status.textContent = steps[Math.floor(progress / 20)];
@@ -655,49 +683,118 @@
         }
 
         function showControls() {
-            alert(`🎮 NAVINE CLIENT CONTROLS 🎮
-
-📌 MENU:
-• Right Shift - Open/Close Hack Menu
-
-👁️ VISUALS:
-• N - Toggle Fullbright
-• INSERT - Toggle Player ESP
-• X - Toggle X-Ray
-
-🏃 MOVEMENT:
-• F - Toggle Flight
-• R - Toggle Speed Hack
-• V - Toggle No Clip
-
-⚔️ COMBAT:
-• K - Toggle Kill Aura
-• G - Toggle Extended Reach
-• C - Toggle Trigger Bot
-
-Settings are saved automatically!`);
+            alert('NAVINE CLIENT CONTROLS\n\n' +
+                  'Right Shift - Open/Close Hack Menu\n' +
+                  'N - Toggle Fullbright\n' +
+                  'INSERT - Toggle Player ESP\n' +
+                  'X - Toggle X-Ray\n' +
+                  'F - Toggle Flight\n' +
+                  'R - Toggle Speed Hack\n' +
+                  'V - Toggle No Clip\n' +
+                  'K - Toggle Kill Aura\n' +
+                  'G - Toggle Extended Reach\n' +
+                  'C - Toggle Trigger Bot\n\n' +
+                  'Settings are saved automatically!');
         }
 
         function loadEaglercraft(type) {
-            const gameFrame = document.getElementById('game-frame');
+            // Directly load the Eaglercraft files
+            const canvas = document.getElementById('game-canvas');
             
-            // Load the original Eaglercraft page
-            gameFrame.src = 'index_original.html'; // Change this to your Eaglercraft file
+            // Check if Eaglercraft files exist
+            const script = document.createElement('script');
+            script.src = 'bootstrap.js';
             
-            // Initialize Navine Client when iframe loads
-            gameFrame.onload = function() {
-                navineClient = new NavineClient();
-                navineClient.gameWindow = gameFrame;
+            script.onload = function() {
+                // Initialize Eaglercraft
+                if (typeof window.eaglercraftXOpts === 'undefined') {
+                    window.eaglercraftXOpts = {
+                        demoMode: false,
+                        container: "game-canvas",
+                        assetsURI: "assets.epw",
+                        worldsDB: "worlds",
+                        servers: type === 'multiplayer' ? [
+                            { addr: "ws://localhost:8081/", name: "Local Server" }
+                        ] : [],
+                        relays: [],
+                        disableChat: true,
+                        simplifiedUI: true
+                    };
+                }
+                
+                // Start the game
+                if (typeof main === 'function') {
+                    main();
+                }
+                
+                // Initialize Navine Client
+                window.navineClient = new NavineClient();
                 
                 // Apply saved hacks
                 setTimeout(() => {
-                    navineClient.activeHacks.forEach(hack => {
-                        if (navineClient.hacks[hack].enabled) {
-                            navineClient.activateHack(hack);
+                    window.navineClient.activeHacks.forEach(hack => {
+                        if (window.navineClient.hacks[hack].enabled) {
+                            window.navineClient.activateHack(hack);
                         }
                     });
                 }, 2000);
             };
+            
+            script.onerror = function() {
+                // If bootstrap.js doesn't exist, create a demo game
+                createDemoGame();
+            };
+            
+            document.head.appendChild(script);
+        }
+
+        function createDemoGame() {
+            // Create a simple demo game
+            const canvas = document.getElementById('game-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            let player = { x: 100, y: 100, size: 20, color: '#4169e1' };
+            let blocks = [];
+            
+            // Generate random blocks
+            for (let i = 0; i < 50; i++) {
+                blocks.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: 20 + Math.random() * 30,
+                    color: '#7df9ff'
+                });
+            }
+            
+            function draw() {
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw blocks
+                blocks.forEach(block => {
+                    ctx.fillStyle = block.color;
+                    ctx.fillRect(block.x, block.y, block.size, block.size);
+                });
+                
+                // Draw player
+                ctx.fillStyle = player.color;
+                ctx.fillRect(player.x, player.y, player.size, player.size);
+                
+                requestAnimationFrame(draw);
+            }
+            
+            // Mouse movement
+            canvas.addEventListener('mousemove', (e) => {
+                player.x = e.clientX - player.size / 2;
+                player.y = e.clientY - player.size / 2;
+            });
+            
+            draw();
+            
+            // Initialize Navine Client
+            window.navineClient = new NavineClient();
         }
 
         // Initialize when page loads
@@ -713,7 +810,7 @@ Settings are saved automatically!`);
             
             document.getElementById('controls-btn').addEventListener('click', showControls);
             
-            // Preload settings
+            // Check for saved settings
             try {
                 const saved = localStorage.getItem('navine-client-settings');
                 if (saved) {
@@ -723,19 +820,6 @@ Settings are saved automatically!`);
                 console.log('No saved settings');
             }
         });
-
-        // Global functions
-        window.toggleHack = function(hackName) {
-            if (navineClient) {
-                navineClient.toggleHack(hackName);
-            }
-        };
-
-        window.toggleMenu = function() {
-            if (navineClient) {
-                navineClient.toggleMenu();
-            }
-        };
     </script>
 </body>
 </html>
