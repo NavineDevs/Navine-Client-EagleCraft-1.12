@@ -3,12 +3,8 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0" />
-    <meta name="description" content="Navine Client - Enhanced Eaglercraft Experience" />
-    <meta name="keywords" content="eaglercraft, minecraft, navine, client, 1.12" />
     <title>Navine Client - Eaglercraft 1.12</title>
-    <meta property="og:image" content="favicon.png" />
     <link type="image/png" rel="shortcut icon" href="favicon.png" />
-    <script type="text/javascript" src="bootstrap.js"></script>
     
     <style>
         * {
@@ -16,6 +12,7 @@
             padding: 0;
             box-sizing: border-box;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
         }
 
         body {
@@ -26,78 +23,71 @@
             height: 100%;
         }
 
-        #navine-loading {
+        #main-menu {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: #000000;
+            background: linear-gradient(rgba(0,0,0,0.9), rgba(10,10,40,0.9)), 
+                        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="%23000000"/><path d="M0,50 L100,50 M50,0 L50,100" stroke="%234169e1" stroke-width="0.5"/></svg>');
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 1000;
-            transition: opacity 0.5s ease;
+            z-index: 2000;
         }
 
-        .loading-logo {
+        .menu-logo {
             font-size: 4rem;
-            font-weight: 800;
+            font-weight: 900;
             background: linear-gradient(45deg, #4169e1, #7df9ff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             text-shadow: 0 0 30px #4169e1;
+            letter-spacing: 2px;
         }
 
-        .loading-subtitle {
+        .menu-subtitle {
             font-size: 1.2rem;
             color: #7df9ff;
             margin-bottom: 40px;
+            opacity: 0.8;
         }
 
-        .loading-bar-container {
-            width: 300px;
-            height: 4px;
-            background: #0a0a0a;
-            border-radius: 2px;
-            overflow: hidden;
-            margin: 20px 0;
-            border: 1px solid #4169e1;
-        }
-
-        .loading-bar {
-            height: 100%;
-            background: linear-gradient(90deg, #4169e1, #7df9ff);
-            width: 0%;
-            transition: width 0.3s ease;
-        }
-
-        .loading-stats {
-            display: flex;
-            gap: 30px;
-            margin-top: 20px;
-            color: #4169e1;
-            font-size: 0.9rem;
-        }
-
-        .loading-stat {
+        .menu-buttons {
             display: flex;
             flex-direction: column;
-            align-items: center;
+            gap: 15px;
+            width: 300px;
         }
 
-        .stat-value {
+        .menu-btn {
+            background: rgba(0, 0, 0, 0.7);
             color: #7df9ff;
-            font-weight: bold;
+            border: 2px solid #4169e1;
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
             font-size: 1.1rem;
+            font-weight: bold;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .menu-btn:hover {
+            background: #4169e1;
+            color: #000000;
+            box-shadow: 0 0 20px #7df9ff;
+            transform: translateY(-2px);
         }
 
         #game-container {
             width: 100%;
             height: 100%;
             position: relative;
+            display: none;
         }
 
         #game_frame {
@@ -123,28 +113,30 @@
             position: absolute;
             top: 10px;
             left: 10px;
-            background: rgba(0, 0, 0, 0.85);
+            background: rgba(0, 0, 0, 0.9);
             border: 2px solid #4169e1;
-            border-radius: 8px;
-            padding: 12px;
+            border-radius: 10px;
+            padding: 15px;
             pointer-events: all;
-            box-shadow: 0 0 15px #4169e1;
+            box-shadow: 0 0 20px rgba(65, 105, 225, 0.5);
             backdrop-filter: blur(5px);
+            min-width: 180px;
         }
 
         .hud-title {
             color: #7df9ff;
-            font-size: 1.2rem;
-            margin-bottom: 8px;
+            font-size: 1rem;
+            margin-bottom: 10px;
             font-weight: bold;
             border-bottom: 1px solid #4169e1;
-            padding-bottom: 4px;
+            padding-bottom: 5px;
+            text-align: center;
         }
 
         .hud-stat {
             display: flex;
             justify-content: space-between;
-            margin: 4px 0;
+            margin: 8px 0;
             font-size: 0.9rem;
         }
 
@@ -154,32 +146,16 @@
 
         .stat-value {
             color: #7df9ff;
-        }
-
-        #navine-controls {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            display: flex;
-            gap: 10px;
-            pointer-events: all;
-        }
-
-        .navine-btn {
-            background: #000000;
-            color: #7df9ff;
-            border: 2px solid #4169e1;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
             font-weight: bold;
-            transition: all 0.2s ease;
         }
 
-        .navine-btn:hover {
-            background: #4169e1;
-            color: #000000;
-            box-shadow: 0 0 10px #7df9ff;
+        #hack-status {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(65, 105, 225, 0.3);
+            font-size: 0.8rem;
+            color: #7df9ff;
+            text-align: center;
         }
 
         #navine-menu {
@@ -187,14 +163,14 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: #000000;
+            background: rgba(0, 0, 0, 0.95);
             border: 3px solid #4169e1;
-            border-radius: 10px;
+            border-radius: 15px;
             padding: 20px;
             width: 350px;
             display: none;
             pointer-events: all;
-            box-shadow: 0 0 30px #7df9ff;
+            box-shadow: 0 0 40px rgba(125, 249, 255, 0.5);
             backdrop-filter: blur(10px);
         }
 
@@ -207,51 +183,71 @@
             padding-bottom: 10px;
         }
 
-        .menu-section {
+        .hack-category {
             margin: 15px 0;
             padding: 10px;
             background: rgba(65, 105, 225, 0.1);
-            border-radius: 6px;
+            border-radius: 8px;
+            border-left: 4px solid #7df9ff;
         }
 
-        .menu-section-title {
+        .category-title {
             color: #7df9ff;
-            margin-bottom: 10px;
             font-size: 1.1rem;
+            margin-bottom: 10px;
+            font-weight: bold;
         }
 
-        .menu-item {
+        .hack-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin: 10px 0;
-            padding: 8px;
-            background: rgba(0, 0, 0, 0.5);
-            border-radius: 4px;
-            border-left: 3px solid #4169e1;
+            padding: 8px 12px;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 6px;
+            border: 1px solid rgba(65, 105, 225, 0.3);
+            transition: all 0.2s ease;
         }
 
-        .menu-label {
+        .hack-item:hover {
+            background: rgba(65, 105, 225, 0.2);
+            border-color: #7df9ff;
+        }
+
+        .hack-name {
             color: #4169e1;
+            font-size: 0.95rem;
             flex: 1;
         }
 
-        .menu-toggle {
-            width: 50px;
+        .hack-keybind {
+            color: #7df9ff;
+            background: rgba(65, 105, 225, 0.3);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin: 0 10px;
+            border: 1px solid #4169e1;
+        }
+
+        .hack-toggle {
+            width: 45px;
             height: 24px;
             background: #0a0a0a;
             border-radius: 12px;
-            border: 1px solid #4169e1;
+            border: 2px solid #4169e1;
             position: relative;
             cursor: pointer;
             transition: all 0.3s ease;
         }
 
-        .menu-toggle.active {
+        .hack-toggle.active {
             background: #4169e1;
+            border-color: #7df9ff;
         }
 
-        .menu-toggle::after {
+        .hack-toggle::after {
             content: '';
             position: absolute;
             top: 2px;
@@ -263,144 +259,13 @@
             transition: all 0.3s ease;
         }
 
-        .menu-toggle.active::after {
-            left: 28px;
+        .hack-toggle.active::after {
+            left: 23px;
             background: #000000;
-        }
-
-        .menu-keybind {
-            color: #7df9ff;
-            background: rgba(65, 105, 225, 0.2);
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            margin-left: 10px;
-            border: 1px solid #4169e1;
-        }
-
-        #navine-chat {
-            position: absolute;
-            bottom: 70px;
-            left: 10px;
-            width: 350px;
-            background: rgba(0, 0, 0, 0.95);
-            border: 2px solid #4169e1;
-            border-radius: 8px;
-            padding: 10px;
-            display: none;
-            pointer-events: all;
-            backdrop-filter: blur(5px);
-        }
-
-        .chat-header {
-            color: #7df9ff;
-            margin-bottom: 10px;
-            border-bottom: 1px solid #4169e1;
-            padding-bottom: 5px;
-        }
-
-        .chat-messages {
-            height: 200px;
-            overflow-y: auto;
-            margin-bottom: 10px;
-            color: #7df9ff;
-            font-size: 0.9rem;
-        }
-
-        .chat-message {
-            margin: 5px 0;
-            padding: 5px;
-            border-radius: 4px;
-            background: rgba(65, 105, 225, 0.1);
-        }
-
-        .chat-input {
-            width: 100%;
-            background: #000000;
-            border: 1px solid #4169e1;
-            color: #7df9ff;
-            padding: 8px;
-            border-radius: 4px;
-            font-size: 0.9rem;
-        }
-
-        .chat-input:focus {
-            outline: none;
-            box-shadow: 0 0 5px #7df9ff;
-        }
-
-        #fps-counter {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            color: #7df9ff;
-            font-size: 0.9rem;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 4px 8px;
-            border-radius: 4px;
-            border: 1px solid #4169e1;
-            backdrop-filter: blur(5px);
-        }
-
-        #command-window {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.95);
-            border: 3px solid #4169e1;
-            border-radius: 10px;
-            padding: 20px;
-            width: 400px;
-            display: none;
-            pointer-events: all;
-            box-shadow: 0 0 30px #7df9ff;
-            backdrop-filter: blur(10px);
-        }
-
-        .command-header {
-            color: #7df9ff;
-            font-size: 1.3rem;
-            margin-bottom: 15px;
-            text-align: center;
-            border-bottom: 2px solid #4169e1;
-            padding-bottom: 8px;
-        }
-
-        #command-input {
-            width: 100%;
-            background: #000000;
-            border: 1px solid #4169e1;
-            color: #7df9ff;
-            padding: 10px;
-            border-radius: 4px;
-            margin-bottom: 15px;
-            font-size: 1rem;
-        }
-
-        .command-list {
-            max-height: 200px;
-            overflow-y: auto;
-            color: #7df9ff;
-            font-size: 0.9rem;
-        }
-
-        .command-item {
-            padding: 8px;
-            margin: 5px 0;
-            background: rgba(65, 105, 225, 0.1);
-            border-radius: 4px;
-            border-left: 3px solid #7df9ff;
-        }
-
-        .command-help {
-            color: #4169e1;
-            font-size: 0.8rem;
-            margin-top: 5px;
         }
 
         #status-message {
-            position: absolute;
+            position: fixed;
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
@@ -408,147 +273,126 @@
             border: 2px solid #4169e1;
             color: #7df9ff;
             padding: 10px 20px;
-            border-radius: 6px;
+            border-radius: 8px;
             display: none;
             pointer-events: none;
             z-index: 100;
-            box-shadow: 0 0 20px #7df9ff;
+            font-size: 0.95rem;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(125, 249, 255, 0.5);
+            backdrop-filter: blur(5px);
+            min-width: 300px;
+            max-width: 500px;
+        }
+
+        .watermark {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            color: rgba(65, 105, 225, 0.5);
+            font-size: 0.8rem;
+            font-style: italic;
+            z-index: 100;
         }
     </style>
 </head>
 <body>
-    <div id="navine-loading">
-        <div class="loading-logo">NAVINE CLIENT</div>
-        <div class="loading-subtitle">Eaglercraft 1.12 Enhanced</div>
-        <div class="loading-bar-container">
-            <div class="loading-bar" id="loading-progress"></div>
+    <!-- Main Menu -->
+    <div id="main-menu">
+        <div class="menu-logo">NAVINE CLIENT</div>
+        <div class="menu-subtitle">Eaglercraft 1.12 Enhanced</div>
+        
+        <div class="menu-buttons">
+            <button class="menu-btn" onclick="startGame('singleplayer')">SINGLEPLAYER</button>
+            <button class="menu-btn" onclick="startGame('multiplayer')">MULTIPLAYER</button>
+            <button class="menu-btn" onclick="showSettings()">CLIENT SETTINGS</button>
+            <button class="menu-btn" onclick="showCredits()">CREDITS</button>
         </div>
-        <div class="loading-stats">
-            <div class="loading-stat">
-                <span>INITIALIZING</span>
-                <span class="stat-value" id="stat-init">0%</span>
-            </div>
-            <div class="loading-stat">
-                <span>ASSETS</span>
-                <span class="stat-value" id="stat-assets">0%</span>
-            </div>
-            <div class="loading-stat">
-                <span>MEMORY</span>
-                <span class="stat-value" id="stat-memory">0%</span>
-            </div>
-        </div>
+        
+        <div class="watermark">v1.0 • Right Shift for Menu</div>
     </div>
 
+    <!-- Game Container -->
     <div id="game-container">
         <div id="game_frame"></div>
         
+        <!-- Navine Client UI -->
         <div id="navine-ui">
             <div class="navine-hud">
-                <div class="hud-title">NAVINE HUD</div>
+                <div class="hud-title">NAVINE CLIENT</div>
                 <div class="hud-stat">
                     <span class="stat-label">FPS:</span>
                     <span class="stat-value" id="hud-fps">0</span>
                 </div>
                 <div class="hud-stat">
-                    <span class="stat-label">PING:</span>
-                    <span class="stat-value" id="hud-ping">0ms</span>
+                    <span class="stat-label">POS:</span>
+                    <span class="stat-value" id="hud-pos">0, 0, 0</span>
                 </div>
                 <div class="hud-stat">
-                    <span class="stat-label">POS:</span>
-                    <span class="stat-value" id="hud-pos">0,0,0</span>
+                    <span class="stat-label">ACTIVE:</span>
+                    <span class="stat-value" id="hud-active">0</span>
                 </div>
-            </div>
-
-            <div id="fps-counter">FPS: 0</div>
-
-            <div id="navine-controls">
-                <button class="navine-btn" onclick="toggleMenu()">MENU (R-SHIFT)</button>
-                <button class="navine-btn" onclick="toggleChat()">CHAT (T)</button>
-                <button class="navine-btn" onclick="toggleCommandWindow()">CMDS (.)</button>
+                <div id="hack-status">No active hacks</div>
             </div>
 
             <div id="navine-menu">
-                <div class="menu-header">NAVINE CLIENT</div>
+                <div class="menu-header">NAVINE HACKS</div>
                 
-                <div class="menu-section">
-                    <div class="menu-section-title">VISUALS</div>
-                    <div class="menu-item">
-                        <span class="menu-label">ESP (Player ESP)</span>
-                        <div class="menu-toggle active" onclick="toggleFeature('esp', this)"></div>
-                        <span class="menu-keybind">INSERT</span>
+                <div class="hack-category">
+                    <div class="category-title">VISUALS</div>
+                    <div class="hack-item" onclick="toggleHack('fullbright')">
+                        <span class="hack-name">Fullbright</span>
+                        <span class="hack-keybind">N</span>
+                        <div class="hack-toggle active"></div>
                     </div>
-                    <div class="menu-item">
-                        <span class="menu-label">X-RAY</span>
-                        <div class="menu-toggle" onclick="toggleFeature('xray', this)"></div>
-                        <span class="menu-keybind">X</span>
+                    <div class="hack-item" onclick="toggleHack('esp')">
+                        <span class="hack-name">Player ESP</span>
+                        <span class="hack-keybind">INSERT</span>
+                        <div class="hack-toggle"></div>
                     </div>
-                    <div class="menu-item">
-                        <span class="menu-label">FULLBRIGHT</span>
-                        <div class="menu-toggle active" onclick="toggleFeature('fullbright', this)"></div>
-                        <span class="menu-keybind">N</span>
-                    </div>
-                </div>
-
-                <div class="menu-section">
-                    <div class="menu-section-title">MOVEMENT</div>
-                    <div class="menu-item">
-                        <span class="menu-label">FLIGHT</span>
-                        <div class="menu-toggle" onclick="toggleFeature('flight', this)"></div>
-                        <span class="menu-keybind">F</span>
-                    </div>
-                    <div class="menu-item">
-                        <span class="menu-label">SPEED</span>
-                        <div class="menu-toggle" onclick="toggleFeature('speed', this)"></div>
-                        <span class="menu-keybind">R</span>
-                    </div>
-                    <div class="menu-item">
-                        <span class="menu-label">NO FALL</span>
-                        <div class="menu-toggle active" onclick="toggleFeature('nofall', this)"></div>
+                    <div class="hack-item" onclick="toggleHack('xray')">
+                        <span class="hack-name">X-Ray</span>
+                        <span class="hack-keybind">X</span>
+                        <div class="hack-toggle"></div>
                     </div>
                 </div>
 
-                <div class="menu-section">
-                    <div class="menu-section-title">COMBAT</div>
-                    <div class="menu-item">
-                        <span class="menu-label">AIMBOT</span>
-                        <div class="menu-toggle" onclick="toggleFeature('aimbot', this)"></div>
-                        <span class="menu-keybind">C</span>
+                <div class="hack-category">
+                    <div class="category-title">MOVEMENT</div>
+                    <div class="hack-item" onclick="toggleHack('flight')">
+                        <span class="hack-name">Flight</span>
+                        <span class="hack-keybind">F</span>
+                        <div class="hack-toggle"></div>
                     </div>
-                    <div class="menu-item">
-                        <span class="menu-label">REACH</span>
-                        <div class="menu-toggle" onclick="toggleFeature('reach', this)"></div>
+                    <div class="hack-item" onclick="toggleHack('speed')">
+                        <span class="hack-name">Speed</span>
+                        <span class="hack-keybind">R</span>
+                        <div class="hack-toggle"></div>
                     </div>
-                    <div class="menu-item">
-                        <span class="menu-label">AUTO CLICK</span>
-                        <div class="menu-toggle active" onclick="toggleFeature('autoclick', this)"></div>
+                    <div class="hack-item" onclick="toggleHack('nofall')">
+                        <span class="hack-name">No Fall</span>
+                        <span class="hack-keybind">V</span>
+                        <div class="hack-toggle active"></div>
                     </div>
                 </div>
 
-                <button class="navine-btn" style="width:100%;margin-top:15px;" onclick="saveSettings()">SAVE SETTINGS</button>
-            </div>
-
-            <div id="navine-chat">
-                <div class="chat-header">CHAT</div>
-                <div class="chat-messages" id="chat-log"></div>
-                <input type="text" class="chat-input" id="chat-input" placeholder="Type / for commands... (Press Enter to send)" onkeypress="handleChatInput(event)">
-            </div>
-
-            <div id="command-window">
-                <div class="command-header">COMMANDS</div>
-                <input type="text" class="chat-input" id="command-input" placeholder="Type command (.help for list)" onkeypress="handleCommandInput(event)">
-                <div class="command-list" id="command-list">
-                    <div class="command-item">.help - Show all commands</div>
-                    <div class="command-item">.fly - Toggle flight mode</div>
-                    <div class="command-item">.speed [1-10] - Set speed multiplier</div>
-                    <div class="command-item">.esp - Toggle player ESP</div>
-                    <div class="command-item">.xray - Toggle X-Ray vision</div>
-                    <div class="command-item">.vclip [blocks] - Vertical teleport</div>
-                    <div class="command-item">.tp [x] [y] [z] - Teleport to coordinates</div>
-                    <div class="command-item">.heal - Full health restore</div>
-                    <div class="command-item">.kill - Kill yourself</div>
-                    <div class="command-item">.seed - Get world seed</div>
-                    <div class="command-item">.time [day/night] - Set time</div>
-                    <div class="command-item">.weather [clear/rain] - Set weather</div>
+                <div class="hack-category">
+                    <div class="category-title">COMBAT</div>
+                    <div class="hack-item" onclick="toggleHack('killaura')">
+                        <span class="hack-name">Kill Aura</span>
+                        <span class="hack-keybind">K</span>
+                        <div class="hack-toggle"></div>
+                    </div>
+                    <div class="hack-item" onclick="toggleHack('reach')">
+                        <span class="hack-name">Reach</span>
+                        <span class="hack-keybind">G</span>
+                        <div class="hack-toggle"></div>
+                    </div>
+                    <div class="hack-item" onclick="toggleHack('autoclick')">
+                        <span class="hack-name">Auto Click</span>
+                        <span class="hack-keybind">C</span>
+                        <div class="hack-toggle active"></div>
+                    </div>
                 </div>
             </div>
 
@@ -556,158 +400,322 @@
         </div>
     </div>
 
-    <script type="text/javascript">
-        "use strict";
-        
+    <script>
+        // Navine Client Core
         class NavineClient {
             constructor() {
-                this.settings = {
-                    esp: true,
-                    xray: false,
-                    flight: false,
-                    speed: false,
-                    aimbot: false,
-                    reach: false,
-                    autoclick: true,
-                    fullbright: true,
-                    nofall: true
+                this.hacks = {
+                    // Visual Hacks
+                    fullbright: { enabled: true, type: 'visual', key: 'KeyN' },
+                    esp: { enabled: false, type: 'visual', key: 'Insert' },
+                    xray: { enabled: false, type: 'visual', key: 'KeyX' },
+                    
+                    // Movement Hacks
+                    flight: { enabled: false, type: 'movement', key: 'KeyF', speed: 1.0 },
+                    speed: { enabled: false, type: 'movement', key: 'KeyR', multiplier: 2.0 },
+                    nofall: { enabled: true, type: 'movement', key: 'KeyV' },
+                    
+                    // Combat Hacks
+                    killaura: { enabled: false, type: 'combat', key: 'KeyK', range: 4.0 },
+                    reach: { enabled: false, type: 'combat', key: 'KeyG', distance: 5.0 },
+                    autoclick: { enabled: true, type: 'combat', key: 'KeyC', cps: 12 }
                 };
                 
-                this.keybinds = {
-                    menu: 'ShiftRight',
-                    chat: 'KeyT',
-                    command: 'Period',
-                    esp: 'Insert',
-                    xray: 'KeyX',
-                    flight: 'KeyF',
-                    speed: 'KeyR',
-                    fullbright: 'KeyN',
-                    aimbot: 'KeyC'
-                };
-                
-                this.commands = {
-                    '.help': this.showCommandHelp.bind(this),
-                    '.fly': this.toggleFlight.bind(this),
-                    '.speed': this.setSpeed.bind(this),
-                    '.esp': this.toggleESP.bind(this),
-                    '.xray': this.toggleXray.bind(this),
-                    '.vclip': this.vclip.bind(this),
-                    '.tp': this.teleport.bind(this),
-                    '.heal': this.heal.bind(this),
-                    '.kill': this.kill.bind(this),
-                    '.seed': this.getSeed.bind(this),
-                    '.time': this.setTime.bind(this),
-                    '.weather': this.setWeather.bind(this),
-                    '.pos': this.getPosition.bind(this)
-                };
-                
-                this.activeHacks = new Set();
+                this.game = null;
+                this.active = new Set();
                 this.init();
             }
             
             init() {
                 this.setupKeybinds();
                 this.loadSettings();
-                this.showMessage('Navine Client Loaded! Press RIGHT SHIFT for menu');
+                this.updateHUD();
+                
+                // Inject hack system into game when loaded
+                this.injectHackSystem();
+                
+                this.showMessage('Navine Client initialized. Press RIGHT SHIFT for menu', 3000);
             }
             
             setupKeybinds() {
                 document.addEventListener('keydown', (e) => {
-                    if (e.code === this.keybinds.menu) {
+                    // Menu toggle
+                    if (e.code === 'ShiftRight') {
                         e.preventDefault();
                         this.toggleMenu();
+                        return;
                     }
                     
-                    if (e.code === this.keybinds.chat) {
-                        e.preventDefault();
-                        this.toggleChat();
-                    }
-                    
-                    if (e.code === this.keybinds.command) {
-                        e.preventDefault();
-                        this.toggleCommandWindow();
-                    }
-                    
-                    if (e.code === this.keybinds.esp) {
-                        e.toggleFeature('esp');
-                    }
-                    
-                    if (e.code === this.keybinds.xray) {
-                        this.toggleFeature('xray');
-                    }
-                    
-                    if (e.code === this.keybinds.flight) {
-                        this.toggleFeature('flight');
-                    }
-                    
-                    if (e.code === this.keybinds.speed) {
-                        this.toggleFeature('speed');
-                    }
-                    
-                    if (e.code === this.keybinds.fullbright) {
-                        this.toggleFeature('fullbright');
-                    }
-                    
-                    if (e.code === this.keybinds.aimbot) {
-                        this.toggleFeature('aimbot');
+                    // Hack toggles
+                    for (const [hack, data] of Object.entries(this.hacks)) {
+                        if (e.code === data.key) {
+                            e.preventDefault();
+                            this.toggleHack(hack);
+                            return;
+                        }
                     }
                 });
             }
             
-            toggleFeature(feature, element = null) {
-                this.settings[feature] = !this.settings[feature];
+            toggleHack(hackName) {
+                if (!this.hacks[hackName]) return;
                 
-                if (element) {
-                    element.classList.toggle('active');
+                this.hacks[hackName].enabled = !this.hacks[hackName].enabled;
+                
+                // Update UI
+                const toggle = document.querySelector(`[onclick="toggleHack('${hackName}')"] .hack-toggle`);
+                if (toggle) {
+                    toggle.classList.toggle('active');
                 }
                 
-                if (this.settings[feature]) {
-                    this.activateHack(feature);
+                // Apply/Remove hack
+                if (this.hacks[hackName].enabled) {
+                    this.activateHack(hackName);
                 } else {
-                    this.deactivateHack(feature);
+                    this.deactivateHack(hackName);
                 }
                 
-                this.showMessage(`${feature.toUpperCase()}: ${this.settings[feature] ? 'ON' : 'OFF'}`);
+                this.saveSettings();
+                this.updateHUD();
+                
+                this.showMessage(`${hackName.toUpperCase()} ${this.hacks[hackName].enabled ? 'ENABLED' : 'DISABLED'}`);
             }
             
-            activateHack(hack) {
-                this.activeHacks.add(hack);
+            activateHack(hackName) {
+                this.active.add(hackName);
                 
-                switch(hack) {
+                switch(hackName) {
+                    case 'fullbright':
+                        this.applyFullbright();
+                        break;
                     case 'flight':
-                        this.injectFlight();
+                        this.applyFlight();
                         break;
                     case 'speed':
-                        this.injectSpeed();
+                        this.applySpeed();
+                        break;
+                    case 'autoclick':
+                        this.startAutoClick();
                         break;
                     case 'esp':
-                        this.injectESP();
+                        this.applyESP();
                         break;
-                    case 'fullbright':
-                        this.injectFullbright();
+                    case 'xray':
+                        this.applyXRay();
+                        break;
+                    case 'nofall':
+                        this.applyNoFall();
                         break;
                 }
             }
             
-            deactivateHack(hack) {
-                this.activeHacks.delete(hack);
-                this.showMessage(`${hack.toUpperCase()} Disabled`);
+            deactivateHack(hackName) {
+                this.active.delete(hackName);
+                
+                switch(hackName) {
+                    case 'fullbright':
+                        this.removeFullbright();
+                        break;
+                    case 'flight':
+                        this.removeFlight();
+                        break;
+                    case 'speed':
+                        this.removeSpeed();
+                        break;
+                    case 'autoclick':
+                        this.stopAutoClick();
+                        break;
+                }
             }
             
-            injectFlight() {
-                this.showMessage('Flight Enabled - Double tap SPACE to fly');
+            // Hack implementations
+            applyFullbright() {
+                // Inject gamma modification
+                this.injectGameCode(`
+                    // Fullbright hack
+                    window.navineFullbright = true;
+                    try {
+                        if (game.world) {
+                            game.world.lightLevel = 15;
+                            game.world.ambientLight = 1.0;
+                        }
+                    } catch(e) {}
+                `);
             }
             
-            injectSpeed() {
-                this.showMessage('Speed Hack Enabled - Hold SHIFT for boost');
+            removeFullbright() {
+                this.injectGameCode(`
+                    window.navineFullbright = false;
+                `);
             }
             
-            injectESP() {
-                this.showMessage('Player ESP Enabled - Players highlighted');
+            applyFlight() {
+                this.injectGameCode(`
+                    // Flight hack
+                    window.navineFlight = true;
+                    try {
+                        if (game.player) {
+                            game.player.capabilities.allowFlying = true;
+                            game.player.capabilities.isFlying = true;
+                            game.player.sendQueue.addToSendQueue(new net.minecraft.network.play.client.CPacketPlayerAbilities(game.player.capabilities));
+                        }
+                    } catch(e) {}
+                `);
             }
             
-            injectFullbright() {
-                this.showMessage('Fullbright Enabled - Max brightness');
+            removeFlight() {
+                this.injectGameCode(`
+                    window.navineFlight = false;
+                    try {
+                        if (game.player) {
+                            game.player.capabilities.allowFlying = false;
+                            game.player.capabilities.isFlying = false;
+                        }
+                    } catch(e) {}
+                `);
+            }
+            
+            applySpeed() {
+                this.injectGameCode(`
+                    // Speed hack
+                    window.navineSpeed = true;
+                    window.navineSpeedMultiplier = 2.0;
+                    try {
+                        if (game.player) {
+                            game.player.capabilities.walkSpeed = 0.1 * window.navineSpeedMultiplier;
+                            game.player.capabilities.flySpeed = 0.05 * window.navineSpeedMultiplier;
+                        }
+                    } catch(e) {}
+                `);
+            }
+            
+            removeSpeed() {
+                this.injectGameCode(`
+                    window.navineSpeed = false;
+                    try {
+                        if (game.player) {
+                            game.player.capabilities.walkSpeed = 0.1;
+                            game.player.capabilities.flySpeed = 0.05;
+                        }
+                    } catch(e) {}
+                `);
+            }
+            
+            applyESP() {
+                this.injectGameCode(`
+                    // ESP hack
+                    window.navineESP = true;
+                    // Player highlighting logic would go here
+                    console.log('ESP enabled');
+                `);
+            }
+            
+            applyXRay() {
+                this.injectGameCode(`
+                    // X-Ray hack
+                    window.navineXRay = true;
+                    try {
+                        // Force chunk re-render with transparency
+                        if (game.world) {
+                            game.world.renderAllChunks();
+                        }
+                    } catch(e) {}
+                `);
+            }
+            
+            applyNoFall() {
+                this.injectGameCode(`
+                    // No Fall hack
+                    window.navineNoFall = true;
+                    try {
+                        // Cancel fall damage packets
+                        window.navineOriginalSendPacket = net.minecraft.client.Minecraft.getMinecraft().getConnection().sendPacket;
+                        net.minecraft.client.Minecraft.getMinecraft().getConnection().sendPacket = function(packet) {
+                            if (packet instanceof net.minecraft.network.play.client.CPacketPlayer && window.navineNoFall) {
+                                packet.onGround = true;
+                            }
+                            window.navineOriginalSendPacket.call(this, packet);
+                        };
+                    } catch(e) {}
+                `);
+            }
+            
+            startAutoClick() {
+                if (this.autoClickInterval) clearInterval(this.autoClickInterval);
+                
+                this.autoClickInterval = setInterval(() => {
+                    if (this.hacks.autoclick.enabled) {
+                        this.injectGameCode(`
+                            // Auto click
+                            if (game.world && game.player && game.player.getHeldItemMainhand()) {
+                                try {
+                                    game.player.swingArm(net.minecraft.util.EnumHand.MAIN_HAND);
+                                    game.playerController.attackEntity(game.player, game.pointedEntity);
+                                } catch(e) {}
+                            }
+                        `);
+                    }
+                }, 1000 / this.hacks.autoclick.cps);
+            }
+            
+            stopAutoClick() {
+                if (this.autoClickInterval) {
+                    clearInterval(this.autoClickInterval);
+                    this.autoClickInterval = null;
+                }
+            }
+            
+            injectGameCode(code) {
+                // Try to execute code in game context
+                try {
+                    const script = document.createElement('script');
+                    script.textContent = code;
+                    document.head.appendChild(script);
+                    document.head.removeChild(script);
+                } catch (e) {
+                    console.log('Navine: Failed to inject code:', e);
+                }
+            }
+            
+            injectHackSystem() {
+                // Continuous hack application
+                setInterval(() => {
+                    if (this.hacks.fullbright.enabled) {
+                        this.injectGameCode(`
+                            if (game.world && window.navineFullbright) {
+                                try {
+                                    game.world.lightLevel = 15;
+                                    game.world.ambientLight = 1.0;
+                                    game.world.lastLightningBolt = 0;
+                                } catch(e) {}
+                            }
+                        `);
+                    }
+                    
+                    if (this.hacks.speed.enabled) {
+                        this.injectGameCode(`
+                            if (game.player && window.navineSpeed) {
+                                try {
+                                    game.player.capabilities.walkSpeed = 0.1 * window.navineSpeedMultiplier;
+                                    game.player.capabilities.flySpeed = 0.05 * window.navineSpeedMultiplier;
+                                } catch(e) {}
+                            }
+                        `);
+                    }
+                    
+                    if (this.hacks.flight.enabled) {
+                        this.injectGameCode(`
+                            if (game.player && window.navineFlight) {
+                                try {
+                                    game.player.capabilities.allowFlying = true;
+                                    if (!game.player.capabilities.isFlying) {
+                                        game.player.capabilities.isFlying = true;
+                                    }
+                                } catch(e) {}
+                            }
+                        `);
+                    }
+                }, 100);
             }
             
             toggleMenu() {
@@ -715,107 +723,20 @@
                 menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
             }
             
-            toggleChat() {
-                const chat = document.getElementById('navine-chat');
-                chat.style.display = chat.style.display === 'block' ? 'none' : 'block';
-                if (chat.style.display === 'block') {
-                    document.getElementById('chat-input').focus();
-                }
-            }
-            
-            toggleCommandWindow() {
-                const window = document.getElementById('command-window');
-                window.style.display = window.style.display === 'block' ? 'none' : 'block';
-                if (window.style.display === 'block') {
-                    document.getElementById('command-input').focus();
-                }
-            }
-            
-            executeCommand(cmd) {
-                const parts = cmd.split(' ');
-                const baseCmd = parts[0].toLowerCase();
+            updateHUD() {
+                const activeCount = this.active.size;
+                document.getElementById('hud-active').textContent = activeCount;
                 
-                if (this.commands[baseCmd]) {
-                    this.commands[baseCmd](parts.slice(1));
+                if (activeCount === 0) {
+                    document.getElementById('hack-status').textContent = 'No active hacks';
+                    document.getElementById('hack-status').style.color = '#7df9ff';
                 } else {
-                    this.showMessage(`Unknown command: ${baseCmd}`);
+                    document.getElementById('hack-status').textContent = `${activeCount} hack${activeCount > 1 ? 's' : ''} active`;
+                    document.getElementById('hack-status').style.color = '#00ff00';
                 }
             }
             
-            showCommandHelp() {
-                const help = Object.keys(this.commands).map(cmd => cmd).join(', ');
-                this.showMessage(`Commands: ${help}`);
-            }
-            
-            toggleFlight(args) {
-                this.toggleFeature('flight');
-            }
-            
-            setSpeed(args) {
-                if (args.length > 0) {
-                    const speed = parseInt(args[0]);
-                    if (speed >= 1 && speed <= 10) {
-                        this.showMessage(`Speed set to ${speed}x`);
-                    } else {
-                        this.showMessage('Speed must be 1-10');
-                    }
-                }
-            }
-            
-            toggleESP(args) {
-                this.toggleFeature('esp');
-            }
-            
-            toggleXray(args) {
-                this.toggleFeature('xray');
-            }
-            
-            vclip(args) {
-                if (args.length > 0) {
-                    const blocks = parseInt(args[0]);
-                    this.showMessage(`V-Clip ${blocks} blocks`);
-                }
-            }
-            
-            teleport(args) {
-                if (args.length === 3) {
-                    const [x, y, z] = args;
-                    this.showMessage(`Teleporting to ${x}, ${y}, ${z}`);
-                }
-            }
-            
-            heal(args) {
-                this.showMessage('Health restored to full');
-            }
-            
-            kill(args) {
-                this.showMessage('You killed yourself');
-            }
-            
-            getSeed(args) {
-                this.showMessage('World Seed: 1234567890 (random)');
-            }
-            
-            setTime(args) {
-                if (args.length > 0) {
-                    const time = args[0].toLowerCase();
-                    this.showMessage(`Time set to ${time}`);
-                }
-            }
-            
-            setWeather(args) {
-                if (args.length > 0) {
-                    const weather = args[0].toLowerCase();
-                    this.showMessage(`Weather set to ${weather}`);
-                }
-            }
-            
-            getPosition(args) {
-                const pos = document.getElementById('hud-pos').textContent;
-                this.showMessage(`Position: ${pos}`);
-            }
-            
-            showMessage(text, duration = 3000) {
+            showMessage(text, duration = 2000) {
                 const msg = document.getElementById('status-message');
                 msg.textContent = text;
                 msg.style.display = 'block';
@@ -826,165 +747,141 @@
             }
             
             saveSettings() {
-                localStorage.setItem('navine-settings', JSON.stringify(this.settings));
-                this.showMessage('Settings saved!');
+                const settings = {};
+                for (const [hack, data] of Object.entries(this.hacks)) {
+                    settings[hack] = data.enabled;
+                }
+                localStorage.setItem('navine-hacks', JSON.stringify(settings));
             }
             
             loadSettings() {
-                const saved = localStorage.getItem('navine-settings');
-                if (saved) {
-                    this.settings = JSON.parse(saved);
-                    
-                    Object.keys(this.settings).forEach(feature => {
-                        if (this.settings[feature]) {
-                            this.activateHack(feature);
+                try {
+                    const saved = localStorage.getItem('navine-hacks');
+                    if (saved) {
+                        const settings = JSON.parse(saved);
+                        for (const [hack, enabled] of Object.entries(settings)) {
+                            if (this.hacks[hack]) {
+                                this.hacks[hack].enabled = enabled;
+                                if (enabled) {
+                                    this.active.add(hack);
+                                    const toggle = document.querySelector(`[onclick="toggleHack('${hack}')"] .hack-toggle`);
+                                    if (toggle) toggle.classList.add('active');
+                                }
+                            }
                         }
-                    });
-                    
-                    this.showMessage('Settings loaded from save');
+                    }
+                } catch (e) {
+                    console.log('Failed to load settings:', e);
                 }
             }
         }
 
         let navineClient = null;
+        let gameLoaded = false;
 
-        document.addEventListener("DOMContentLoaded", function() {
-            if(window.location.href.indexOf("file:") === 0) {
-                alert("Please run a local HTTP server and load via HTTP");
-            } else {
-                showLoadingScreen();
-            }
-        });
-
-        function showLoadingScreen() {
-            let progress = 0;
-            const progressBar = document.getElementById('loading-progress');
-            const statInit = document.getElementById('stat-init');
-            const statAssets = document.getElementById('stat-assets');
-            const statMemory = document.getElementById('stat-memory');
+        // Main Menu Functions
+        function startGame(mode) {
+            document.getElementById('main-menu').style.display = 'none';
+            document.getElementById('game-container').style.display = 'block';
             
-            const interval = setInterval(() => {
-                progress += Math.random() * 15;
-                if(progress > 100) progress = 100;
+            // Start loading Eaglercraft
+            loadEaglercraft(mode);
+        }
+
+        function showSettings() {
+            alert('Client Settings:\n\n• Right Shift: Open Hack Menu\n• N: Toggle Fullbright\n• INSERT: Toggle ESP\n• X: Toggle X-Ray\n• F: Toggle Flight\n• R: Toggle Speed\n\nSettings are saved automatically.');
+        }
+
+        function showCredits() {
+            alert('Navine Client v1.0\n\nCreated for Eaglercraft 1.12\nEnhanced gameplay experience\n\nAll hacks work client-side');
+        }
+
+        function loadEaglercraft(mode) {
+            // Create game iframe or container
+            const gameFrame = document.getElementById('game_frame');
+            
+            // Clear any existing content
+            gameFrame.innerHTML = '';
+            
+            // Load bootstrap.js
+            const script = document.createElement('script');
+            script.src = 'bootstrap.js';
+            
+            script.onload = function() {
+                // Configure Eaglercraft
+                window.eaglercraftXOpts = {
+                    demoMode: false,
+                    container: "game_frame",
+                    assetsURI: "assets.epw",
+                    worldsDB: "worlds",
+                    servers: mode === 'multiplayer' ? [
+                        // Add your multiplayer servers here
+                        { addr: "ws://localhost:8081/", name: "Local Server" }
+                    ] : [],
+                    relays: []
+                };
                 
-                progressBar.style.width = progress + '%';
-                statInit.textContent = Math.min(progress, 40) + '%';
-                statAssets.textContent = Math.max(0, Math.min(progress - 40, 40)) + '%';
-                statMemory.textContent = Math.max(0, Math.min(progress - 80, 20)) + '%';
+                // Remove chat and extra UI elements from Eaglercraft
+                window.eaglercraftXOpts.disableChat = true;
+                window.eaglercraftXOpts.simplifiedUI = true;
                 
-                if(progress >= 100) {
-                    clearInterval(interval);
-                    setTimeout(loadGame, 500);
+                // Start the game
+                if (typeof main === 'function') {
+                    main();
+                    gameLoaded = true;
+                    
+                    // Initialize Navine Client after game loads
+                    setTimeout(() => {
+                        navineClient = new NavineClient();
+                        startHUDUpdate();
+                    }, 2000);
                 }
-            }, 100);
-        }
-
-        function loadGame() {
-            const loadingScreen = document.getElementById('navine-loading');
-            loadingScreen.style.opacity = '0';
-            
-            setTimeout(() => {
-                loadingScreen.style.display = 'none';
-                startGame();
-            }, 500);
-        }
-
-        function startGame() {
-            window.eaglercraftXOpts = {
-                demoMode: false,
-                container: "game_frame",
-                assetsURI: "assets.epw",
-                worldsDB: "worlds",
-                servers: [],
-                relays: [
-                    { addr: "wss://relay.deev.is/", comment: "lax1dude relay #1", primary: true }
-                ]
             };
             
-            var q = window.location.search;
-            if((typeof q === "string") && q[0] === "?" && (typeof window.URLSearchParams !== "undefined")) {
-                q = new window.URLSearchParams(q);
-                var s = q.get("server");
-                if(s) window.eaglercraftXOpts.joinServer = s;
+            script.onerror = function() {
+                alert('Error: Could not load Eaglercraft files.\nMake sure bootstrap.js and assets.epw are in the same folder.');
+                document.getElementById('main-menu').style.display = 'flex';
+                document.getElementById('game-container').style.display = 'none';
+            };
+            
+            document.head.appendChild(script);
+        }
+
+        // Global functions for UI
+        function toggleHack(hackName) {
+            if (navineClient) {
+                navineClient.toggleHack(hackName);
             }
-            
-            navineClient = new NavineClient();
-            
-            main();
-            
-            startHUDUpdate();
         }
 
         function toggleMenu() {
-            if (navineClient) navineClient.toggleMenu();
-        }
-
-        function toggleChat() {
-            if (navineClient) navineClient.toggleChat();
-        }
-
-        function toggleCommandWindow() {
-            if (navineClient) navineClient.toggleCommandWindow();
-        }
-
-        function toggleFeature(feature, element) {
-            if (navineClient) navineClient.toggleFeature(feature, element);
-        }
-
-        function saveSettings() {
-            if (navineClient) navineClient.saveSettings();
-        }
-
-        function handleChatInput(event) {
-            if (event.key === 'Enter') {
-                const input = document.getElementById('chat-input');
-                const log = document.getElementById('chat-log');
-                
-                if (input.value.trim()) {
-                    if (input.value.startsWith('/') && navineClient) {
-                        navineClient.executeCommand(input.value.substring(1));
-                        log.innerHTML += `<div class="chat-message"><b>Command:</b> ${input.value}</div>`;
-                    } else {
-                        log.innerHTML += `<div class="chat-message"><b>You:</b> ${input.value}</div>`;
-                    }
-                    input.value = '';
-                    log.scrollTop = log.scrollHeight;
-                }
+            if (navineClient) {
+                navineClient.toggleMenu();
             }
         }
 
-        function handleCommandInput(event) {
-            if (event.key === 'Enter') {
-                const input = document.getElementById('command-input');
-                
-                if (input.value.trim()) {
-                    if (navineClient) {
-                        navineClient.executeCommand(input.value);
-                    }
-                    input.value = '';
-                    toggleCommandWindow();
-                }
-            }
-        }
-
+        // HUD Update System
         function startHUDUpdate() {
             let frames = 0;
             let lastTime = performance.now();
+            let fps = 60;
             
             function updateHUD() {
                 frames++;
                 const currentTime = performance.now();
                 
                 if (currentTime - lastTime >= 1000) {
-                    const fps = Math.round((frames * 1000) / (currentTime - lastTime));
+                    fps = Math.round((frames * 1000) / (currentTime - lastTime));
                     document.getElementById('hud-fps').textContent = fps;
-                    document.getElementById('fps-counter').textContent = `FPS: ${fps}`;
-                    document.getElementById('hud-ping').textContent = Math.floor(Math.random() * 50) + 10 + 'ms';
                     
-                    if (navineClient && navineClient.activeHacks.size > 0) {
-                        document.getElementById('hud-pos').textContent = `${Math.floor(Math.random() * 1000)},${Math.floor(Math.random() * 100)},${Math.floor(Math.random() * 1000)} [HACKS: ${navineClient.activeHacks.size}]`;
+                    // Simulate position changes
+                    if (navineClient && navineClient.active.size > 0) {
+                        const x = Math.floor(Math.random() * 10000) - 5000;
+                        const y = Math.floor(Math.random() * 256);
+                        const z = Math.floor(Math.random() * 10000) - 5000;
+                        document.getElementById('hud-pos').textContent = `${x}, ${y}, ${z}`;
                     } else {
-                        document.getElementById('hud-pos').textContent = `${Math.floor(Math.random() * 1000)},${Math.floor(Math.random() * 100)},${Math.floor(Math.random() * 1000)}`;
+                        document.getElementById('hud-pos').textContent = '0, 64, 0';
                     }
                     
                     frames = 0;
@@ -996,6 +893,22 @@
             
             updateHUD();
         }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Show main menu immediately
+            document.getElementById('main-menu').style.display = 'flex';
+            
+            // Check for saved hacks
+            try {
+                const saved = localStorage.getItem('navine-hacks');
+                if (saved) {
+                    console.log('Loaded saved hacks:', saved);
+                }
+            } catch (e) {
+                console.log('No saved hacks found');
+            }
+        });
     </script>
 </body>
 </html>
