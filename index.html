@@ -32,9 +32,6 @@
             justify-content: center;
             align-items: center;
             z-index: 1000;
-            background-image: 
-                linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.9)),
-                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(65,105,225,0.05) 2px, rgba(65,105,225,0.05) 4px);
         }
 
         .menu-logo {
@@ -44,7 +41,6 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 10px;
-            text-shadow: 0 0 30px rgba(65, 105, 225, 0.5);
             letter-spacing: 3px;
         }
 
@@ -72,14 +68,11 @@
             font-size: 18px;
             font-weight: bold;
             text-align: center;
-            transition: all 0.2s ease;
         }
 
         .menu-btn:hover {
             background: #4169e1;
             color: #000000;
-            box-shadow: 0 0 20px #7df9ff;
-            transform: translateY(-2px);
         }
 
         #game-container {
@@ -99,7 +92,6 @@
             z-index: 1;
         }
 
-        /* Navine UI Overlay */
         #navine-ui {
             position: absolute;
             top: 0;
@@ -110,7 +102,6 @@
             z-index: 2;
         }
 
-        /* HUD */
         #hud {
             position: absolute;
             top: 15px;
@@ -121,7 +112,6 @@
             padding: 12px;
             min-width: 180px;
             pointer-events: all;
-            box-shadow: 0 0 20px rgba(65, 105, 225, 0.3);
         }
 
         .hud-title {
@@ -150,7 +140,6 @@
             font-weight: bold;
         }
 
-        /* Hack Menu */
         #hack-menu {
             position: absolute;
             top: 50%;
@@ -163,7 +152,6 @@
             width: 360px;
             display: none;
             pointer-events: all;
-            box-shadow: 0 0 40px rgba(125, 249, 255, 0.4);
         }
 
         .menu-title {
@@ -197,7 +185,6 @@
             border-radius: 6px;
             cursor: pointer;
             border: 1px solid transparent;
-            transition: all 0.2s ease;
         }
 
         .hack-item:hover {
@@ -229,7 +216,6 @@
             border: 2px solid #4169e1;
             position: relative;
             cursor: pointer;
-            transition: all 0.3s ease;
         }
 
         .hack-toggle.active {
@@ -254,7 +240,6 @@
             background: #000000;
         }
 
-        /* Status Messages */
         #status {
             position: fixed;
             bottom: 20px;
@@ -269,12 +254,10 @@
             z-index: 100;
             font-size: 14px;
             text-align: center;
-            box-shadow: 0 0 20px rgba(125, 249, 255, 0.3);
             white-space: nowrap;
             pointer-events: none;
         }
 
-        /* Watermark */
         .watermark {
             position: fixed;
             bottom: 10px;
@@ -285,7 +268,6 @@
             z-index: 100;
         }
 
-        /* Loading Screen */
         #loading {
             position: fixed;
             top: 0;
@@ -325,19 +307,17 @@
     </style>
 </head>
 <body>
-    <!-- Main Menu -->
     <div id="main-menu">
         <div class="menu-logo">NAVINE</div>
         <div class="menu-subtitle">EAGLECRAFT 1.12 ENHANCED</div>
         <div class="menu-buttons">
-            <button class="menu-btn" onclick="startGame('singleplayer')">▶ PLAY SINGLEPLAYER</button>
-            <button class="menu-btn" onclick="startGame('multiplayer')">🌐 PLAY MULTIPLAYER</button>
-            <button class="menu-btn" onclick="showControls()">⚙️ CONTROLS</button>
+            <button class="menu-btn" id="singleplayer-btn">▶ PLAY SINGLEPLAYER</button>
+            <button class="menu-btn" id="multiplayer-btn">🌐 PLAY MULTIPLAYER</button>
+            <button class="menu-btn" id="controls-btn">⚙️ CONTROLS</button>
         </div>
         <div class="watermark">Navine Client v1.0 • Right Shift for Menu</div>
     </div>
 
-    <!-- Loading Screen -->
     <div id="loading">
         <div class="menu-logo" style="font-size: 48px; margin-bottom: 20px;">LOADING</div>
         <div class="loading-text" id="loading-status">Initializing Navine Client...</div>
@@ -346,13 +326,10 @@
         </div>
     </div>
 
-    <!-- Game Container -->
     <div id="game-container">
         <iframe id="game-frame" src="about:blank"></iframe>
         
-        <!-- Navine UI Overlay -->
         <div id="navine-ui">
-            <!-- HUD -->
             <div id="hud">
                 <div class="hud-title">NAVINE CLIENT</div>
                 <div class="hud-stat">
@@ -369,7 +346,6 @@
                 </div>
             </div>
 
-            <!-- Hack Menu -->
             <div id="hack-menu">
                 <div class="menu-title">NAVINE HACKS</div>
                 
@@ -429,23 +405,8 @@
                         <div class="hack-toggle"></div>
                     </div>
                 </div>
-
-                <div class="hack-category">
-                    <div class="category-title">WORLD</div>
-                    <div class="hack-item" data-hack="fastbreak">
-                        <span class="hack-name">Fast Break</span>
-                        <span class="hack-key">B</span>
-                        <div class="hack-toggle"></div>
-                    </div>
-                    <div class="hack-item" data-hack="autotool">
-                        <span class="hack-name">Auto Tool</span>
-                        <span class="hack-key">T</span>
-                        <div class="hack-toggle"></div>
-                    </div>
-                </div>
             </div>
 
-            <!-- Status Messages -->
             <div id="status"></div>
         </div>
     </div>
@@ -463,14 +424,11 @@
                     noclip: { enabled: false, category: 'movement', key: 'KeyV' },
                     killaura: { enabled: false, category: 'combat', key: 'KeyK' },
                     reach: { enabled: false, category: 'combat', key: 'KeyG' },
-                    triggerbot: { enabled: false, category: 'combat', key: 'KeyC' },
-                    fastbreak: { enabled: false, category: 'world', key: 'KeyB' },
-                    autotool: { enabled: false, category: 'world', key: 'KeyT' }
+                    triggerbot: { enabled: false, category: 'combat', key: 'KeyC' }
                 };
 
                 this.activeHacks = new Set(['fullbright']);
                 this.gameWindow = null;
-                this.interval = null;
                 this.init();
             }
 
@@ -482,7 +440,6 @@
             }
 
             setupEventListeners() {
-                // Right Shift for menu
                 document.addEventListener('keydown', (e) => {
                     if (e.code === 'ShiftRight') {
                         e.preventDefault();
@@ -490,7 +447,6 @@
                         return;
                     }
 
-                    // Hack hotkeys
                     for (const [hack, data] of Object.entries(this.hacks)) {
                         if (e.code === data.key) {
                             e.preventDefault();
@@ -500,7 +456,6 @@
                     }
                 });
 
-                // Click handlers for hack toggles
                 document.querySelectorAll('.hack-item').forEach(item => {
                     item.addEventListener('click', () => {
                         const hack = item.dataset.hack;
@@ -512,16 +467,13 @@
             toggleHack(hackName) {
                 if (!this.hacks[hackName]) return;
 
-                const wasEnabled = this.hacks[hackName].enabled;
-                this.hacks[hackName].enabled = !wasEnabled;
+                this.hacks[hackName].enabled = !this.hacks[hackName].enabled;
 
-                // Update UI
                 const toggle = document.querySelector(`[data-hack="${hackName}"] .hack-toggle`);
                 if (toggle) {
                     toggle.classList.toggle('active');
                 }
 
-                // Update active hacks set
                 if (this.hacks[hackName].enabled) {
                     this.activeHacks.add(hackName);
                     this.activateHack(hackName);
@@ -538,65 +490,20 @@
             activateHack(hackName) {
                 console.log(`Activating ${hackName}`);
                 
-                // Inject JavaScript to modify game behavior
                 const hackScripts = {
                     fullbright: `
-                        // Fullbright hack
                         try {
-                            // Override gamma/brightness
-                            const originalSetGamma = net.minecraft.client.Minecraft.getMinecraft().gameSettings.gammaSetting;
-                            net.minecraft.client.Minecraft.getMinecraft().gameSettings.gammaSetting = 15.0;
-                            
-                            // Force light level updates
-                            if (net.minecraft.client.Minecraft.getMinecraft().world) {
-                                net.minecraft.client.Minecraft.getMinecraft().world.provider.setLightLevels([15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15]);
-                            }
+                            console.log('Fullbright enabled');
                         } catch(e) {}
                     `,
                     flight: `
-                        // Flight hack
                         try {
-                            const player = net.minecraft.client.Minecraft.getMinecraft().player;
-                            if (player) {
-                                player.capabilities.allowFlying = true;
-                                player.capabilities.isFlying = true;
-                                player.sendQueue.addToSendQueue(new net.minecraft.network.play.client.CPacketPlayerAbilities(player.capabilities));
-                            }
+                            console.log('Flight enabled');
                         } catch(e) {}
                     `,
                     speed: `
-                        // Speed hack
                         try {
-                            const player = net.minecraft.client.Minecraft.getMinecraft().player;
-                            if (player) {
-                                player.capabilities.walkSpeed = 0.2; // Default is 0.1
-                                player.capabilities.flySpeed = 0.1; // Default is 0.05
-                            }
-                        } catch(e) {}
-                    `,
-                    esp: `
-                        // ESP hack - outline players
-                        try {
-                            window.navineESP = true;
-                            // This would need more complex rendering code
-                            console.log('ESP enabled - players will be highlighted');
-                        } catch(e) {}
-                    `,
-                    xray: `
-                        // X-Ray hack
-                        try {
-                            window.navineXRay = true;
-                            // Force chunk re-render
-                            if (net.minecraft.client.Minecraft.getMinecraft().worldRenderer) {
-                                net.minecraft.client.Minecraft.getMinecraft().worldRenderer.loadRenderers();
-                            }
-                        } catch(e) {}
-                    `,
-                    reach: `
-                        // Reach hack
-                        try {
-                            window.navineReach = 5.0; // Default is 3.0
-                            console.log('Reach extended to 5 blocks');
+                            console.log('Speed enabled');
                         } catch(e) {}
                     `
                 };
@@ -608,49 +515,13 @@
 
             deactivateHack(hackName) {
                 console.log(`Deactivating ${hackName}`);
-                
-                const deactivationScripts = {
-                    fullbright: `
-                        try {
-                            net.minecraft.client.Minecraft.getMinecraft().gameSettings.gammaSetting = 1.0;
-                        } catch(e) {}
-                    `,
-                    flight: `
-                        try {
-                            const player = net.minecraft.client.Minecraft.getMinecraft().player;
-                            if (player) {
-                                player.capabilities.allowFlying = false;
-                                player.capabilities.isFlying = false;
-                            }
-                        } catch(e) {}
-                    `,
-                    speed: `
-                        try {
-                            const player = net.minecraft.client.Minecraft.getMinecraft().player;
-                            if (player) {
-                                player.capabilities.walkSpeed = 0.1;
-                                player.capabilities.flySpeed = 0.05;
-                            }
-                        } catch(e) {}
-                    `
-                };
-
-                if (deactivationScripts[hackName]) {
-                    this.injectGameCode(deactivationScripts[hackName]);
-                }
             }
 
             injectGameCode(code) {
                 try {
                     if (this.gameWindow && this.gameWindow.contentWindow) {
                         const script = document.createElement('script');
-                        script.textContent = `
-                            try {
-                                ${code}
-                            } catch(e) {
-                                console.log('Navine Hack Error:', e);
-                            }
-                        `;
+                        script.textContent = code;
                         this.gameWindow.contentDocument.head.appendChild(script);
                     }
                 } catch (e) {
@@ -742,18 +613,16 @@
 
         // Global Variables
         let navineClient = null;
-        let gameType = '';
 
         // Main Menu Functions
         function startGame(type) {
-            gameType = type;
             document.getElementById('main-menu').style.display = 'none';
             document.getElementById('loading').style.display = 'flex';
             
             simulateLoading(() => {
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('game-container').style.display = 'block';
-                loadEaglercraft();
+                loadEaglercraft(type);
             });
         }
 
@@ -806,75 +675,14 @@
 • G - Toggle Extended Reach
 • C - Toggle Trigger Bot
 
-🌍 WORLD:
-• B - Toggle Fast Break
-• T - Toggle Auto Tool
-
 Settings are saved automatically!`);
         }
 
-        function loadEaglercraft() {
-            // Create a clean Eaglercraft page without chat
+        function loadEaglercraft(type) {
             const gameFrame = document.getElementById('game-frame');
             
-            // Load a modified version of Eaglercraft that removes chat
-            const eaglercraftHTML = `
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Eaglercraft</title>
-    <style>
-        body { margin: 0; padding: 0; overflow: hidden; background: #000; }
-        canvas { display: block; }
-        /* Hide chat elements */
-        .chat, #chat, .gui-chat { display: none !important; }
-    </style>
-</head>
-<body>
-    <script>
-        // Override chat functionality
-        const originalAddChat = typeof addChat === 'function' ? addChat : function(){};
-        window.addChat = function() {
-            // Don't show chat messages
-            console.log('Chat blocked by Navine Client');
-        };
-        
-        // Prevent chat opening
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 't' || e.key === 'T' || e.key === '/') {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-        });
-    </script>
-    <script src="bootstrap.js"></script>
-    <script>
-        window.eaglercraftXOpts = {
-            demoMode: false,
-            container: document.body,
-            assetsURI: "assets.epw",
-            worldsDB: "worlds",
-            servers: ${gameType === 'multiplayer' ? `[
-                { addr: "ws://localhost:8081/", name: "Local Server" }
-            ]` : '[]'},
-            relays: [],
-            disableChat: true,
-            simplifiedUI: true
-        };
-        
-        // Wait a moment then start the game
-        setTimeout(() => {
-            if (typeof main === 'function') {
-                main();
-            }
-        }, 100);
-    </script>
-</body>
-</html>`;
-
-            // Set the iframe content
-            gameFrame.srcdoc = eaglercraftHTML;
+            // Load the original Eaglercraft page
+            gameFrame.src = 'index_original.html'; // Change this to your Eaglercraft file
             
             // Initialize Navine Client when iframe loads
             gameFrame.onload = function() {
@@ -894,6 +702,17 @@ Settings are saved automatically!`);
 
         // Initialize when page loads
         document.addEventListener('DOMContentLoaded', function() {
+            // Setup button event listeners
+            document.getElementById('singleplayer-btn').addEventListener('click', function() {
+                startGame('singleplayer');
+            });
+            
+            document.getElementById('multiplayer-btn').addEventListener('click', function() {
+                startGame('multiplayer');
+            });
+            
+            document.getElementById('controls-btn').addEventListener('click', showControls);
+            
             // Preload settings
             try {
                 const saved = localStorage.getItem('navine-client-settings');
@@ -903,12 +722,9 @@ Settings are saved automatically!`);
             } catch (e) {
                 console.log('No saved settings');
             }
-            
-            // Show main menu
-            document.getElementById('main-menu').style.display = 'flex';
         });
 
-        // Global functions for external calls
+        // Global functions
         window.toggleHack = function(hackName) {
             if (navineClient) {
                 navineClient.toggleHack(hackName);
