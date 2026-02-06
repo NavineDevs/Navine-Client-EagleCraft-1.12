@@ -490,6 +490,58 @@
             border: 1px solid rgba(65, 105, 225, 0.3);
             font-weight: 600;
         }
+
+        /* EAGLERCRAFT FALLBACK */
+        #eaglercraft-fallback {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            border: 3px solid #4169e1;
+            border-radius: 16px;
+            padding: 40px;
+            width: 600px;
+            text-align: center;
+            display: none;
+            z-index: 1000001;
+            box-shadow: 0 0 60px rgba(125, 249, 255, 0.7);
+        }
+
+        .fallback-title {
+            color: #7df9ff;
+            font-size: 28px;
+            margin-bottom: 20px;
+            font-weight: 900;
+            text-shadow: 0 0 15px #7df9ff;
+        }
+
+        .fallback-text {
+            color: #4169e1;
+            font-size: 18px;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .fallback-btn {
+            background: linear-gradient(135deg, #4169e1, #7df9ff);
+            color: #000000;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: 800;
+            transition: all 0.3s;
+            margin: 10px;
+            display: inline-block;
+            text-decoration: none;
+        }
+
+        .fallback-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 0 30px #7df9ff;
+        }
     </style>
 </head>
 <body>
@@ -508,6 +560,27 @@
     <!-- GAME CONTAINER -->
     <div id="game-container">
         <iframe id="game-frame" allowfullscreen></iframe>
+    </div>
+
+    <!-- EAGLERCRAFT FALLBACK -->
+    <div id="eaglercraft-fallback">
+        <div class="fallback-title">EAGLERCRAFT LOADING</div>
+        <div class="fallback-text">
+            Eaglercraft is being loaded from an external source.<br>
+            This may take a few seconds. If it doesn't load automatically,<br>
+            please click one of the options below:
+        </div>
+        <div style="margin-top: 30px;">
+            <button class="fallback-btn" onclick="navine.openEaglercraftNewTab()">
+                Open Eaglercraft in New Tab
+            </button>
+            <button class="fallback-btn" onclick="navine.embedEaglercraft()">
+                Load Embedded Version
+            </button>
+        </div>
+        <div style="margin-top: 20px; color: #7df9ff; font-size: 14px;">
+            Navine Client overlay will work on top of any Minecraft page
+        </div>
     </div>
 
     <!-- NAVINE OVERLAY -->
@@ -653,6 +726,7 @@
                 this.gameLoaded = false;
                 this.commandHistory = [];
                 this.historyIndex = -1;
+                this.eaglercraftAttempts = 0;
                 
                 this.init();
             }
@@ -720,95 +794,98 @@
 
             startEaglercraft() {
                 try {
-                    // Load Eaglercraft from working source
+                    // Try multiple Eaglercraft sources
+                    const sources = [
+                        'https://g.eags.us/eaglercraft/1.12/',
+                        'https://eaglercraft.com/',
+                        'https://minecraftclassic.online/',
+                        'https://classic.minecraft.net/'
+                    ];
+                    
                     const iframe = document.getElementById('game-frame');
+                    const currentSource = sources[this.eaglercraftAttempts % sources.length];
                     
-                    // Create Eaglercraft HTML with embedded scripts
-                    const eaglercraftHTML = `
-                        <!DOCTYPE html>
-                        <html>
-                        <head>
-                            <meta charset="UTF-8">
-                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                            <title>Eaglercraft</title>
-                            <style>
-                                body { margin: 0; padding: 0; overflow: hidden; background: #000; }
-                                canvas { display: block; }
-                            </style>
-                            <script>
-                                // Eaglercraft configuration
-                                window.eaglercraftOpts = {
-                                    demoMode: false,
-                                    container: "game-container",
-                                    assetsURI: "https://cdn.jsdelivr.net/gh/lax1dude/eaglercraft/stable-downloads/res/",
-                                    worldsDB: "worlds",
-                                    servers: [
-                                        { addr: "ws://localhost:8081/", name: "Local Server" },
-                                        { addr: "wss://mc.ayunami2000.net/", name: "Ayunami Public Server" }
-                                    ],
-                                    relays: [
-                                        { addr: "wss://relay.deev.is/", comment: "lax1dude relay #1" },
-                                        { addr: "wss://relay.lax1dude.net/", comment: "lax1dude relay #2" },
-                                        { addr: "wss://relay.shhnowisnottheti.me/", comment: "ayunami relay #1" }
-                                    ]
-                                };
-                                
-                                // Load Eaglercraft script
-                                function loadEaglercraft() {
-                                    const script = document.createElement('script');
-                                    script.src = 'https://cdn.jsdelivr.net/gh/lax1dude/eaglercraft/stable-downloads/eaglercraft-1.12-offline.js';
-                                    script.onload = function() {
-                                        if (typeof main === 'function') {
-                                            main();
-                                            console.log('Eaglercraft loaded successfully');
-                                            // Notify parent window
-                                            if (window.parent && window.parent.navine) {
-                                                window.parent.navine.gameLoaded = true;
-                                                window.parent.navine.showStatus('Eaglercraft Loaded!', 2000);
-                                                window.parent.navine.applySavedHacks();
-                                            }
-                                        }
-                                    };
-                                    script.onerror = function() {
-                                        console.error('Failed to load Eaglercraft');
-                                        document.body.innerHTML = '<div style="color: white; padding: 20px; text-align: center;">Failed to load Eaglercraft. Please check console.</div>';
-                                    };
-                                    document.head.appendChild(script);
-                                }
-                                
-                                // Start loading when page is ready
-                                window.addEventListener('load', loadEaglercraft);
-                            <\/script>
-                        <\/head>
-                        <body>
-                            <div id="game-container"></div>
-                        <\/body>
-                        <\/html>
-                    `;
+                    console.log(`Loading Eaglercraft from: ${currentSource}`);
                     
-                    // Set iframe content
-                    iframe.srcdoc = eaglercraftHTML;
+                    iframe.src = currentSource;
                     
                     iframe.onload = () => {
-                        console.log('Eaglercraft iframe loaded');
+                        console.log('Eaglercraft iframe loaded successfully');
                         this.gameLoaded = true;
+                        document.getElementById('eaglercraft-fallback').style.display = 'none';
+                        this.showStatus('Eaglercraft Loaded!', 2000);
+                        this.applySavedHacks();
                     };
+                    
+                    iframe.onerror = () => {
+                        console.error('Failed to load Eaglercraft from:', currentSource);
+                        this.eaglercraftAttempts++;
+                        
+                        if (this.eaglercraftAttempts < sources.length) {
+                            // Try next source
+                            setTimeout(() => {
+                                this.startEaglercraft();
+                            }, 1000);
+                        } else {
+                            // All sources failed, show fallback
+                            this.showEaglercraftFallback();
+                        }
+                    };
+                    
+                    // Set timeout for loading
+                    setTimeout(() => {
+                        if (!this.gameLoaded && iframe.contentWindow && iframe.contentWindow.document.readyState === 'complete') {
+                            this.gameLoaded = true;
+                            document.getElementById('eaglercraft-fallback').style.display = 'none';
+                            this.showStatus('Eaglercraft Loaded!', 2000);
+                            this.applySavedHacks();
+                        }
+                    }, 5000);
                     
                 } catch (e) {
                     console.error('Error loading Eaglercraft:', e);
-                    this.showStatus('Error: Could not load game', 3000);
-                    // Alternative: Provide direct link
-                    document.getElementById('loading-text').innerHTML = `
-                        <div style="text-align: center; color: #7df9ff; margin-top: 20px;">
-                            <p>Eaglercraft loading issue detected.</p>
-                            <p>Try direct link:</p>
-                            <a href="https://g.eags.us/eaglercraft/1.12/" 
-                               style="color: #4169e1; text-decoration: underline; font-weight: bold;"
-                               target="_blank">Play Eaglercraft 1.12</a>
-                            <p style="margin-top: 10px;">Navine Client overlay will still work on top.</p>
-                        </div>
-                    `;
+                    this.showEaglercraftFallback();
                 }
+            }
+
+            showEaglercraftFallback() {
+                document.getElementById('eaglercraft-fallback').style.display = 'block';
+                this.showStatus('Eaglercraft loading failed - use fallback options', 4000);
+            }
+
+            openEaglercraftNewTab() {
+                window.open('https://g.eags.us/eaglercraft/1.12/', '_blank');
+                this.showStatus('Eaglercraft opened in new tab. Navine overlay active here.', 3000);
+            }
+
+            embedEaglercraft() {
+                // Try to embed a simple version
+                const iframe = document.getElementById('game-frame');
+                iframe.srcdoc = `
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <style>
+                            body { margin: 0; padding: 0; background: #000; display: flex; justify-content: center; align-items: center; height: 100vh; }
+                            .fallback-game { color: white; text-align: center; padding: 20px; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="fallback-game">
+                            <h2>Eaglercraft Embedded</h2>
+                            <p>For full Eaglercraft experience, use the "Open in New Tab" option.</p>
+                            <p>Navine Client features work independently of the game.</p>
+                            <div style="margin-top: 30px; padding: 20px; background: rgba(255,255,255,0.1); border-radius: 10px;">
+                                <p>Press Right Shift for Navine Menu</p>
+                                <p>Press . for Commands</p>
+                                <p>Try the Fullbright and ESP hacks!</p>
+                            </div>
+                        </div>
+                    </body>
+                    </html>
+                `;
+                document.getElementById('eaglercraft-fallback').style.display = 'none';
+                this.showStatus('Embedded version loaded', 2000);
             }
 
             applySavedHacks() {
@@ -857,6 +934,7 @@
                     if (e.code === 'Escape') {
                         document.getElementById('hack-menu').style.display = 'none';
                         document.getElementById('command-window').style.display = 'none';
+                        document.getElementById('eaglercraft-fallback').style.display = 'none';
                     }
                 });
                 
@@ -897,6 +975,13 @@
                     if (e.target.closest('#navine-overlay')) {
                         e.preventDefault();
                     }
+                });
+                
+                // Handle clicks on fallback buttons
+                document.querySelectorAll('.fallback-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                    });
                 });
             }
 
@@ -978,17 +1063,17 @@
                 
                 // Create ESP visualization
                 const espContent = `
-                    <div style="position: absolute; left: 100px; top: 150px; width: 50px; height: 100px; border: 2px solid #ff0000; background: rgba(255, 0, 0, 0.1); border-radius: 4px; box-shadow: 0 0 15px rgba(255, 0, 0, 0.7); animation: espPulse 1s infinite alternate;"></div>
-                    <div style="position: absolute; left: 100px; top: 260px; color: #ff0000; background: rgba(0,0,0,0.8); padding: 2px 8px; border-radius: 3px; font-size: 12px; font-weight: bold; text-shadow: 1px 1px 2px #000; border: 1px solid #ff0000; transform: translateX(-50%);">Player1</div>
+                    <div style="position: absolute; left: 15%; top: 30%; width: 50px; height: 100px; border: 2px solid #ff0000; background: rgba(255, 0, 0, 0.1); border-radius: 4px; box-shadow: 0 0 15px rgba(255, 0, 0, 0.7); animation: espPulse 1s infinite alternate;"></div>
+                    <div style="position: absolute; left: 15%; top: calc(30% + 110px); color: #ff0000; background: rgba(0,0,0,0.8); padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; text-shadow: 1px 1px 2px #000; border: 1px solid #ff0000; transform: translateX(-50%);">Player1</div>
                     
-                    <div style="position: absolute; left: 300px; top: 200px; width: 50px; height: 100px; border: 2px solid #ff0000; background: rgba(255, 0, 0, 0.1); border-radius: 4px; box-shadow: 0 0 15px rgba(255, 0, 0, 0.7); animation: espPulse 1.2s infinite alternate;"></div>
-                    <div style="position: absolute; left: 300px; top: 310px; color: #ff0000; background: rgba(0,0,0,0.8); padding: 2px 8px; border-radius: 3px; font-size: 12px; font-weight: bold; text-shadow: 1px 1px 2px #000; border: 1px solid #ff0000; transform: translateX(-50%);">Player2</div>
+                    <div style="position: absolute; left: 35%; top: 35%; width: 50px; height: 100px; border: 2px solid #ff0000; background: rgba(255, 0, 0, 0.1); border-radius: 4px; box-shadow: 0 0 15px rgba(255, 0, 0, 0.7); animation: espPulse 1.2s infinite alternate;"></div>
+                    <div style="position: absolute; left: 35%; top: calc(35% + 110px); color: #ff0000; background: rgba(0,0,0,0.8); padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; text-shadow: 1px 1px 2px #000; border: 1px solid #ff0000; transform: translateX(-50%);">Player2</div>
                     
-                    <div style="position: absolute; left: 500px; top: 250px; width: 50px; height: 100px; border: 2px solid #ff0000; background: rgba(255, 0, 0, 0.1); border-radius: 4px; box-shadow: 0 0 15px rgba(255, 0, 0, 0.7); animation: espPulse 1.4s infinite alternate;"></div>
-                    <div style="position: absolute; left: 500px; top: 360px; color: #ff0000; background: rgba(0,0,0,0.8); padding: 2px 8px; border-radius: 3px; font-size: 12px; font-weight: bold; text-shadow: 1px 1px 2px #000; border: 1px solid #ff0000; transform: translateX(-50%);">Player3</div>
+                    <div style="position: absolute; left: 55%; top: 40%; width: 50px; height: 100px; border: 2px solid #ff0000; background: rgba(255, 0, 0, 0.1); border-radius: 4px; box-shadow: 0 0 15px rgba(255, 0, 0, 0.7); animation: espPulse 1.4s infinite alternate;"></div>
+                    <div style="position: absolute; left: 55%; top: calc(40% + 110px); color: #ff0000; background: rgba(0,0,0,0.8); padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; text-shadow: 1px 1px 2px #000; border: 1px solid #ff0000; transform: translateX(-50%);">Player3</div>
                     
-                    <div style="position: absolute; left: 700px; top: 300px; width: 50px; height: 100px; border: 2px solid #ff0000; background: rgba(255, 0, 0, 0.1); border-radius: 4px; box-shadow: 0 0 15px rgba(255, 0, 0, 0.7); animation: espPulse 1.6s infinite alternate;"></div>
-                    <div style="position: absolute; left: 700px; top: 410px; color: #ff0000; background: rgba(0,0,0,0.8); padding: 2px 8px; border-radius: 3px; font-size: 12px; font-weight: bold; text-shadow: 1px 1px 2px #000; border: 1px solid #ff0000; transform: translateX(-50%);">Player4</div>
+                    <div style="position: absolute; left: 75%; top: 45%; width: 50px; height: 100px; border: 2px solid #ff0000; background: rgba(255, 0, 0, 0.1); border-radius: 4px; box-shadow: 0 0 15px rgba(255, 0, 0, 0.7); animation: espPulse 1.6s infinite alternate;"></div>
+                    <div style="position: absolute; left: 75%; top: calc(45% + 110px); color: #ff0000; background: rgba(0,0,0,0.8); padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; text-shadow: 1px 1px 2px #000; border: 1px solid #ff0000; transform: translateX(-50%);">Player4</div>
                     
                     <style>
                         @keyframes espPulse {
@@ -1092,6 +1177,7 @@
                 menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
                 if (menu.style.display === 'block') {
                     document.getElementById('command-window').style.display = 'none';
+                    document.getElementById('eaglercraft-fallback').style.display = 'none';
                 }
             }
 
@@ -1100,6 +1186,7 @@
                 cmdWindow.style.display = cmdWindow.style.display === 'block' ? 'none' : 'block';
                 if (cmdWindow.style.display === 'block') {
                     document.getElementById('hack-menu').style.display = 'none';
+                    document.getElementById('eaglercraft-fallback').style.display = 'none';
                     document.getElementById('command-input').focus();
                 }
             }
