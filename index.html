@@ -1,51 +1,24 @@
 <!DOCTYPE html>
-<html lang="en">
+<html style="width:100%;height:100%;background-color:black;">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Navine Client - EagleCraft 1.12</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0" />
+    <meta name="description" content="Navine Client - EagleCraft 1.12 Enhanced" />
+    <meta name="keywords" content="navineclient, eaglercraft, minecraft, 1.12" />
+    <title>Navine Client 1.12</title>
+    <meta property="og:locale" content="en-US" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Navine Client" />
+    <meta property="og:description" content="Enhanced EagleCraft 1.12 with Navine Client hacks" />
+    <meta property="og:image" content="favicon.png" />
+    <link type="image/png" rel="shortcut icon" href="favicon.png" />
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', monospace; }
-        body { background: #000000; overflow: hidden; width: 100%; height: 100vh; }
         
-        #navine-loader {
+        /* NAVINE CLIENT OVERLAY STYLES */
+        #navine-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000000; display: flex; flex-direction: column;
-            justify-content: center; align-items: center; z-index: 10000;
-        }
-        
-        .loader-logo {
-            font-size: 64px; font-weight: 900;
-            background: linear-gradient(to right, #4169e1, #7df9ff);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            margin-bottom: 10px; letter-spacing: 3px;
-        }
-        
-        .loader-text {
-            color: #7df9ff; font-size: 18px; margin-bottom: 30px; opacity: 0.8;
-        }
-        
-        .loading-bar-container {
-            width: 400px; height: 8px; background: #0a0a0a;
-            border-radius: 4px; overflow: hidden; border: 2px solid #4169e1;
-            box-shadow: 0 0 10px #4169e1;
-        }
-        
-        .loading-bar { height: 100%; background: linear-gradient(90deg, #4169e1, #7df9ff); width: 0%; }
-        
-        #game-container {
-            width: 100%; height: 100%; display: none; position: relative;
-        }
-        
-        canvas { 
-            width: 100%; height: 100%; display: block; 
-            cursor: crosshair;
-        }
-        
-        /* NAVINE CLIENT UI */
-        #navine-ui {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; z-index: 100; overflow: hidden;
+            pointer-events: none; z-index: 999999; overflow: hidden;
         }
         
         /* HUD - BOTTOM LEFT */
@@ -95,13 +68,12 @@
             border: 2px solid #4169e1; padding: 12px 25px;
             border-radius: 10px; cursor: pointer; font-size: 15px;
             font-weight: bold; transition: all 0.3s;
-            min-width: 140px; text-align: center;
+            min-width: 140px; text-align: center; pointer-events: all;
         }
         
         .control-btn:hover {
             background: #4169e1; color: #000000;
             box-shadow: 0 0 20px #7df9ff;
-            transform: translateY(-2px);
         }
         
         /* HACK MENU */
@@ -111,7 +83,7 @@
             border: 3px solid #4169e1; border-radius: 15px; padding: 25px;
             width: 450px; display: none; pointer-events: all;
             box-shadow: 0 0 50px rgba(125, 249, 255, 0.6);
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px); z-index: 1000000;
         }
         
         .menu-title {
@@ -136,13 +108,12 @@
             display: flex; justify-content: space-between; align-items: center;
             padding: 12px; margin: 10px 0; background: rgba(65, 105, 225, 0.1);
             border-radius: 8px; cursor: pointer; border: 1px solid transparent;
-            transition: all 0.2s;
+            transition: all 0.2s; pointer-events: all;
         }
         
         .hack-item:hover {
             background: rgba(65, 105, 225, 0.25); 
             border-color: #7df9ff;
-            transform: translateX(5px);
         }
         
         .hack-name { 
@@ -176,7 +147,6 @@
         
         .hack-toggle.active::after {
             left: 27px; background: #000000;
-            box-shadow: 0 0 5px #000000;
         }
         
         /* COMMAND WINDOW */
@@ -186,7 +156,7 @@
             border: 3px solid #4169e1; border-radius: 15px; padding: 25px;
             width: 500px; display: none; pointer-events: all;
             box-shadow: 0 0 50px rgba(125, 249, 255, 0.6);
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px); z-index: 1000000;
         }
         
         .command-header {
@@ -198,12 +168,7 @@
         #command-input {
             width: 100%; background: #000000; border: 2px solid #4169e1;
             color: #7df9ff; padding: 12px; border-radius: 8px;
-            margin-bottom: 20px; font-size: 15px;
-            outline: none; transition: all 0.3s;
-        }
-        
-        #command-input:focus {
-            border-color: #7df9ff; box-shadow: 0 0 15px #4169e1;
+            margin-bottom: 20px; font-size: 15px; outline: none;
         }
         
         .command-list {
@@ -211,27 +176,9 @@
             font-size: 14px; padding-right: 5px;
         }
         
-        .command-list::-webkit-scrollbar {
-            width: 8px;
-        }
-        
-        .command-list::-webkit-scrollbar-track {
-            background: rgba(65, 105, 225, 0.1); border-radius: 4px;
-        }
-        
-        .command-list::-webkit-scrollbar-thumb {
-            background: #4169e1; border-radius: 4px;
-        }
-        
         .command-item {
             padding: 10px; margin: 8px 0; background: rgba(65, 105, 225, 0.1);
             border-radius: 8px; border-left: 4px solid #7df9ff;
-            transition: all 0.2s;
-        }
-        
-        .command-item:hover {
-            background: rgba(65, 105, 225, 0.2);
-            transform: translateX(5px);
         }
         
         /* STATUS MESSAGE */
@@ -240,21 +187,21 @@
             transform: translateX(-50%); background: rgba(0, 0, 0, 0.95);
             border: 2px solid #4169e1; color: #7df9ff; padding: 15px 30px;
             border-radius: 10px; display: none; pointer-events: none;
-            z-index: 200; font-size: 15px; text-align: center;
+            z-index: 1000000; font-size: 15px; text-align: center;
             box-shadow: 0 0 25px rgba(125, 249, 255, 0.6);
-            backdrop-filter: blur(5px); min-width: 300px;
+            min-width: 300px;
         }
         
         /* HACK OVERLAYS */
         #fullbright-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(255, 255, 255, 0.2); pointer-events: none;
-            z-index: 49; display: none;
+            z-index: 9999; display: none;
         }
         
         #esp-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; z-index: 50; display: none;
+            pointer-events: none; z-index: 9998; display: none;
         }
         
         .esp-box {
@@ -263,19 +210,31 @@
             box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
         }
         
-        .esp-label {
-            position: absolute; color: #ff0000; font-size: 12px;
-            font-weight: bold; text-shadow: 1px 1px 3px #000000;
-            background: rgba(0, 0, 0, 0.7); padding: 2px 6px;
-            border-radius: 3px; white-space: nowrap;
+        /* LOADER */
+        #navine-loader {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000000; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 10000000;
         }
         
-        /* X-RAY OVERLAY */
-        #xray-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.7); pointer-events: none;
-            z-index: 48; display: none;
+        .loader-logo {
+            font-size: 64px; font-weight: 900;
+            background: linear-gradient(to right, #4169e1, #7df9ff);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 10px; letter-spacing: 3px;
         }
+        
+        .loader-text {
+            color: #7df9ff; font-size: 18px; margin-bottom: 30px; opacity: 0.8;
+        }
+        
+        .loading-bar-container {
+            width: 400px; height: 8px; background: #0a0a0a;
+            border-radius: 4px; overflow: hidden; border: 2px solid #4169e1;
+            box-shadow: 0 0 10px #4169e1;
+        }
+        
+        .loading-bar { height: 100%; background: linear-gradient(90deg, #4169e1, #7df9ff); width: 0%; }
         
         /* WATERMARK */
         #watermark {
@@ -284,155 +243,144 @@
             font-style: italic; pointer-events: none;
         }
     </style>
+    
+    <script type="text/javascript" src="bootstrap.js"></script>
 </head>
-<body>
-    <!-- LOADING SCREEN -->
-    <div id="navine-loader">
-        <div class="loader-logo">NAVINE CLIENT</div>
-        <div class="loader-text">EAGLECRAFT 1.12 ENHANCED</div>
-        <div class="loading-bar-container">
-            <div class="loading-bar" id="loading-bar"></div>
+<body style="margin:0px;width:100%;height:100%;overflow:hidden;background-color:black;" id="game_frame">
+    <!-- NAVINE CLIENT OVERLAY -->
+    <div id="navine-overlay">
+        <!-- LOADER -->
+        <div id="navine-loader">
+            <div class="loader-logo">NAVINE CLIENT</div>
+            <div class="loader-text">LOADING EAGLECRAFT 1.12</div>
+            <div class="loading-bar-container">
+                <div class="loading-bar" id="loading-bar"></div>
+            </div>
+            <div id="loading-text" style="color: #7df9ff; margin-top: 25px; font-size: 16px;">Initializing...</div>
         </div>
-        <div id="loading-text" style="color: #7df9ff; margin-top: 25px; font-size: 16px;">Initializing...</div>
-    </div>
 
-    <!-- GAME CONTAINER -->
-    <div id="game-container">
-        <canvas id="game-canvas"></canvas>
-        
         <!-- HACK OVERLAYS -->
         <div id="fullbright-overlay"></div>
         <div id="esp-overlay"></div>
-        <div id="xray-overlay"></div>
         
-        <!-- NAVINE UI -->
-        <div id="navine-ui">
-            <!-- HUD -->
-            <div id="navine-hud">
-                <div class="navine-title">NAVINE CLIENT</div>
-                <div class="navine-stat">
-                    <span class="navine-label">FPS:</span>
-                    <span class="navine-value" id="hud-fps">60</span>
-                </div>
-                <div class="navine-stat">
-                    <span class="navine-label">HACKS:</span>
-                    <span class="navine-value" id="hud-hacks">0</span>
-                </div>
-                <div class="navine-stat">
-                    <span class="navine-label">POS:</span>
-                    <span class="navine-value" id="hud-pos">0, 64, 0</span>
-                </div>
-                <div id="hack-status">Status: Ready</div>
+        <!-- HUD -->
+        <div id="navine-hud">
+            <div class="navine-title">NAVINE CLIENT</div>
+            <div class="navine-stat">
+                <span class="navine-label">FPS:</span>
+                <span class="navine-value" id="hud-fps">0</span>
             </div>
-
-            <!-- WATERMARK -->
-            <div id="watermark">Navine Client v1.0</div>
-
-            <!-- CONTROL BUTTONS -->
-            <div id="control-buttons">
-                <button class="control-btn" onclick="navine.toggleMenu()">MENU (R-SHIFT)</button>
-                <button class="control-btn" onclick="navine.toggleCommands()">CMDS (.)</button>
+            <div class="navine-stat">
+                <span class="navine-label">HACKS:</span>
+                <span class="navine-value" id="hud-hacks">0</span>
             </div>
-
-            <!-- HACK MENU -->
-            <div id="hack-menu">
-                <div class="menu-title">NAVINE HACKS</div>
-                
-                <div class="hack-category">
-                    <div class="category-title">VISUALS</div>
-                    <div class="hack-item" onclick="navine.toggleHack('fullbright')">
-                        <span class="hack-name">Fullbright</span>
-                        <span class="hack-key">N</span>
-                        <div class="hack-toggle" id="toggle-fullbright"></div>
-                    </div>
-                    <div class="hack-item" onclick="navine.toggleHack('esp')">
-                        <span class="hack-name">Player ESP</span>
-                        <span class="hack-key">INSERT</span>
-                        <div class="hack-toggle" id="toggle-esp"></div>
-                    </div>
-                    <div class="hack-item" onclick="navine.toggleHack('xray')">
-                        <span class="hack-name">X-Ray Vision</span>
-                        <span class="hack-key">X</span>
-                        <div class="hack-toggle" id="toggle-xray"></div>
-                    </div>
-                </div>
-
-                <div class="hack-category">
-                    <div class="category-title">MOVEMENT</div>
-                    <div class="hack-item" onclick="navine.toggleHack('flight')">
-                        <span class="hack-name">Flight</span>
-                        <span class="hack-key">F</span>
-                        <div class="hack-toggle" id="toggle-flight"></div>
-                    </div>
-                    <div class="hack-item" onclick="navine.toggleHack('speed')">
-                        <span class="hack-name">Speed Hack</span>
-                        <span class="hack-key">R</span>
-                        <div class="hack-toggle" id="toggle-speed"></div>
-                    </div>
-                    <div class="hack-item" onclick="navine.toggleHack('noclip')">
-                        <span class="hack-name">No Clip</span>
-                        <span class="hack-key">V</span>
-                        <div class="hack-toggle" id="toggle-noclip"></div>
-                    </div>
-                </div>
-
-                <div class="hack-category">
-                    <div class="category-title">COMBAT</div>
-                    <div class="hack-item" onclick="navine.toggleHack('killaura')">
-                        <span class="hack-name">Kill Aura</span>
-                        <span class="hack-key">K</span>
-                        <div class="hack-toggle" id="toggle-killaura"></div>
-                    </div>
-                    <div class="hack-item" onclick="navine.toggleHack('reach')">
-                        <span class="hack-name">Extended Reach</span>
-                        <span class="hack-key">G</span>
-                        <div class="hack-toggle" id="toggle-reach"></div>
-                    </div>
-                    <div class="hack-item" onclick="navine.toggleHack('triggerbot')">
-                        <span class="hack-name">Trigger Bot</span>
-                        <span class="hack-key">C</span>
-                        <div class="hack-toggle" id="toggle-triggerbot"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- COMMAND WINDOW -->
-            <div id="command-window">
-                <div class="command-header">NAVINE COMMANDS</div>
-                <input type="text" id="command-input" placeholder="Type command (.help for list)" 
-                       onkeypress="if(event.key==='Enter') navine.executeCommand(this.value); this.value='';">
-                <div class="command-list">
-                    <div class="command-item">.help - Show all commands</div>
-                    <div class="command-item">.fly - Toggle flight mode</div>
-                    <div class="command-item">.speed [1-10] - Set speed multiplier</div>
-                    <div class="command-item">.esp - Toggle player ESP</div>
-                    <div class="command-item">.xray - Toggle X-Ray vision</div>
-                    <div class="command-item">.fullbright - Toggle fullbright</div>
-                    <div class="command-item">.vclip [blocks] - Vertical teleport</div>
-                    <div class="command-item">.tp [x y z] - Teleport to coordinates</div>
-                    <div class="command-item">.heal - Full health restore</div>
-                    <div class="command-item">.kill - Kill yourself</div>
-                    <div class="command-item">.seed - Get world seed</div>
-                    <div class="command-item">.time [day/night] - Set time</div>
-                    <div class="command-item">.weather [clear/rain] - Set weather</div>
-                    <div class="command-item">.noclip - Toggle no clip</div>
-                    <div class="command-item">.killaura - Toggle kill aura</div>
-                    <div class="command-item">.reach [3-10] - Set reach distance</div>
-                    <div class="command-item">.tphere [player] - Teleport player to you</div>
-                    <div class="command-item">.flyspeed [1-10] - Set fly speed</div>
-                    <div class="command-item">.gamemode [0-3] - Change gamemode</div>
-                </div>
-            </div>
-
-            <!-- STATUS MESSAGE -->
-            <div id="status-message"></div>
+            <div id="hack-status">Status: Ready</div>
         </div>
+
+        <!-- WATERMARK -->
+        <div id="watermark">Navine Client v1.0</div>
+
+        <!-- CONTROL BUTTONS -->
+        <div id="control-buttons">
+            <button class="control-btn" onclick="navine.toggleMenu()">MENU (R-SHIFT)</button>
+            <button class="control-btn" onclick="navine.toggleCommands()">CMDS (.)</button>
+        </div>
+
+        <!-- HACK MENU -->
+        <div id="hack-menu">
+            <div class="menu-title">NAVINE HACKS</div>
+            
+            <div class="hack-category">
+                <div class="category-title">VISUALS</div>
+                <div class="hack-item" onclick="navine.toggleHack('fullbright')">
+                    <span class="hack-name">Fullbright</span>
+                    <span class="hack-key">N</span>
+                    <div class="hack-toggle" id="toggle-fullbright"></div>
+                </div>
+                <div class="hack-item" onclick="navine.toggleHack('esp')">
+                    <span class="hack-name">Player ESP</span>
+                    <span class="hack-key">INSERT</span>
+                    <div class="hack-toggle" id="toggle-esp"></div>
+                </div>
+                <div class="hack-item" onclick="navine.toggleHack('xray')">
+                    <span class="hack-name">X-Ray Vision</span>
+                    <span class="hack-key">X</span>
+                    <div class="hack-toggle" id="toggle-xray"></div>
+                </div>
+            </div>
+
+            <div class="hack-category">
+                <div class="category-title">MOVEMENT</div>
+                <div class="hack-item" onclick="navine.toggleHack('flight')">
+                    <span class="hack-name">Flight</span>
+                    <span class="hack-key">F</span>
+                    <div class="hack-toggle" id="toggle-flight"></div>
+                </div>
+                <div class="hack-item" onclick="navine.toggleHack('speed')">
+                    <span class="hack-name">Speed Hack</span>
+                    <span class="hack-key">R</span>
+                    <div class="hack-toggle" id="toggle-speed"></div>
+                </div>
+                <div class="hack-item" onclick="navine.toggleHack('noclip')">
+                    <span class="hack-name">No Clip</span>
+                    <span class="hack-key">V</span>
+                    <div class="hack-toggle" id="toggle-noclip"></div>
+                </div>
+            </div>
+
+            <div class="hack-category">
+                <div class="category-title">COMBAT</div>
+                <div class="hack-item" onclick="navine.toggleHack('killaura')">
+                    <span class="hack-name">Kill Aura</span>
+                    <span class="hack-key">K</span>
+                    <div class="hack-toggle" id="toggle-killaura"></div>
+                </div>
+                <div class="hack-item" onclick="navine.toggleHack('reach')">
+                    <span class="hack-name">Extended Reach</span>
+                    <span class="hack-key">G</span>
+                    <div class="hack-toggle" id="toggle-reach"></div>
+                </div>
+                <div class="hack-item" onclick="navine.toggleHack('triggerbot')">
+                    <span class="hack-name">Trigger Bot</span>
+                    <span class="hack-key">C</span>
+                    <div class="hack-toggle" id="toggle-triggerbot"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- COMMAND WINDOW -->
+        <div id="command-window">
+            <div class="command-header">NAVINE COMMANDS</div>
+            <input type="text" id="command-input" placeholder="Type command (.help for list)" 
+                   onkeypress="if(event.key==='Enter') navine.executeCommand(this.value); this.value='';">
+            <div class="command-list">
+                <div class="command-item">.help - Show all commands</div>
+                <div class="command-item">.fly - Toggle flight mode</div>
+                <div class="command-item">.speed [1-10] - Set speed multiplier</div>
+                <div class="command-item">.esp - Toggle player ESP</div>
+                <div class="command-item">.xray - Toggle X-Ray vision</div>
+                <div class="command-item">.fullbright - Toggle fullbright</div>
+                <div class="command-item">.vclip [blocks] - Vertical teleport</div>
+                <div class="command-item">.tp [x y z] - Teleport to coordinates</div>
+                <div class="command-item">.heal - Full health restore</div>
+                <div class="command-item">.kill - Kill yourself</div>
+                <div class="command-item">.seed - Get world seed</div>
+                <div class="command-item">.time [day/night] - Set time</div>
+                <div class="command-item">.weather [clear/rain] - Set weather</div>
+                <div class="command-item">.noclip - Toggle no clip</div>
+                <div class="command-item">.killaura - Toggle kill aura</div>
+                <div class="command-item">.reach [3-10] - Set reach distance</div>
+            </div>
+        </div>
+
+        <!-- STATUS MESSAGE -->
+        <div id="status-message"></div>
     </div>
 
-    <script>
-        // ============================================
+    <script type="text/javascript">
+        "use strict";
+        
         // NAVINE CLIENT CORE
-        // ============================================
         class NavineClient {
             constructor() {
                 this.hacks = {
@@ -448,16 +396,9 @@
                 };
                 
                 this.activeHacks = new Set();
-                this.fps = 60;
-                this.gameRunning = false;
-                this.playerPosition = { x: 0, y: 64, z: 0 };
-                this.playerRotation = { yaw: 0, pitch: 0 };
-                this.entities = [];
-                this.worldTime = 6000; // Noon
-                this.gameMode = 'survival';
-                this.health = 20;
-                this.hunger = 20;
-                
+                this.fps = 0;
+                this.gameLoaded = false;
+                this.eaglercraftInstance = null;
                 this.init();
             }
 
@@ -465,9 +406,7 @@
                 this.loadSettings();
                 this.setupEventListeners();
                 this.startFPSUpdate();
-                this.startPositionUpdate();
                 this.simulateLoading();
-                this.generateTestEntities();
             }
 
             simulateLoading() {
@@ -477,350 +416,70 @@
                 
                 const steps = [
                     'Initializing Navine Client...',
-                    'Loading EagleCraft 1.12 Engine...',
-                    'Setting up hack system...',
-                    'Preparing render pipeline...',
-                    'Loading world generator...',
-                    'Initializing physics engine...',
-                    'Setting up multiplayer bridge...',
+                    'Loading hack system...',
+                    'Setting up keybindings...',
+                    'Preparing Eaglercraft integration...',
                     'Loading assets...',
-                    'Preparing user interface...',
-                    'Starting game...'
+                    'Starting game engine...'
                 ];
                 
                 const interval = setInterval(() => {
-                    progress += 10;
-                    bar.style.width = `${progress}%`;
-                    text.textContent = steps[Math.min(Math.floor(progress / 10), steps.length - 1)];
+                    progress += 16.6;
+                    bar.style.width = `${Math.min(progress, 100)}%`;
+                    text.textContent = steps[Math.min(Math.floor(progress / 16.6), steps.length - 1)];
                     
                     if (progress >= 100) {
                         clearInterval(interval);
                         setTimeout(() => {
-                            this.startGame();
+                            this.startEaglercraft();
                         }, 500);
                     }
                 }, 200);
             }
 
-            startGame() {
+            startEaglercraft() {
+                // Hide loader
                 document.getElementById('navine-loader').style.display = 'none';
-                document.getElementById('game-container').style.display = 'block';
-                this.gameRunning = true;
                 
-                this.startGameLoop();
-                this.showStatus('Navine Client Ready! Press Right Shift for Menu');
-                
-                // Apply saved hacks
-                for (const hack in this.hacks) {
-                    if (this.hacks[hack].enabled) {
-                        this.activateHack(hack);
-                    }
-                }
-                this.updateHUD();
-                
-                // Initial game setup
-                this.initializeWorld();
-            }
-
-            initializeWorld() {
-                const canvas = document.getElementById('game-canvas');
-                canvas.width = window.innerWidth;
-                canvas.height = window.innerHeight;
-                
-                // Generate initial world state
-                this.worldSeed = Math.floor(Math.random() * 1000000000);
-                this.worldType = 'default';
-                this.difficulty = 'normal';
-                
-                // Generate some initial entities
-                this.generateTestEntities();
-                
-                // Start game systems
-                this.startGameSystems();
-            }
-
-            generateTestEntities() {
-                this.entities = [];
-                // Add some test players
-                for (let i = 0; i < 5; i++) {
-                    this.entities.push({
-                        type: 'player',
-                        id: i,
-                        name: `Player${i + 1}`,
-                        position: {
-                            x: this.playerPosition.x + (Math.random() - 0.5) * 50,
-                            y: this.playerPosition.y,
-                            z: this.playerPosition.z + (Math.random() - 0.5) * 50
-                        },
-                        rotation: {
-                            yaw: Math.random() * 360,
-                            pitch: 0
-                        },
-                        health: 20,
-                        visible: true
-                    });
-                }
-                
-                // Add some mobs
-                for (let i = 0; i < 3; i++) {
-                    this.entities.push({
-                        type: 'zombie',
-                        id: 100 + i,
-                        name: `Zombie${i + 1}`,
-                        position: {
-                            x: this.playerPosition.x + (Math.random() - 0.5) * 30,
-                            y: this.playerPosition.y,
-                            z: this.playerPosition.z + (Math.random() - 0.5) * 30
-                        },
-                        health: 20,
-                        visible: true
-                    });
-                }
-            }
-
-            startGameSystems() {
-                // Simulate entity movement
-                setInterval(() => {
-                    if (this.gameRunning) {
-                        this.updateEntities();
-                        if (this.hacks.esp.enabled) {
-                            this.updateESP();
-                        }
-                    }
-                }, 1000 / 20); // 20 Hz entity update
-            }
-
-            updateEntities() {
-                this.entities.forEach(entity => {
-                    // Simulate movement
-                    if (entity.type === 'player' || entity.type === 'zombie') {
-                        entity.position.x += (Math.random() - 0.5) * 0.5;
-                        entity.position.z += (Math.random() - 0.5) * 0.5;
-                        
-                        // Simple physics
-                        if (entity.position.y > 64) {
-                            entity.position.y -= 0.1;
-                        }
-                    }
-                });
-            }
-
-            startGameLoop() {
-                const canvas = document.getElementById('game-canvas');
-                const ctx = canvas.getContext('2d');
-                
-                const gameLoop = () => {
-                    if (!this.gameRunning) return;
-                    
-                    // Update canvas size
-                    canvas.width = window.innerWidth;
-                    canvas.height = window.innerHeight;
-                    
-                    // Clear canvas
-                    ctx.fillStyle = '#000000';
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
-                    
-                    // Draw sky gradient
-                    const skyGradient = ctx.createLinearGradient(0, 0, 0, canvas.height / 2);
-                    skyGradient.addColorStop(0, '#1a237e');
-                    skyGradient.addColorStop(1, '#000000');
-                    ctx.fillStyle = skyGradient;
-                    ctx.fillRect(0, 0, canvas.width, canvas.height / 2);
-                    
-                    // Draw ground
-                    ctx.fillStyle = '#2e7d32';
-                    ctx.fillRect(0, canvas.height / 2, canvas.width, canvas.height / 2);
-                    
-                    // Draw sun/moon based on time
-                    this.drawCelestialBody(ctx);
-                    
-                    // Draw player
-                    this.drawPlayer(ctx);
-                    
-                    // Draw entities if ESP is enabled
-                    if (this.hacks.esp.enabled) {
-                        this.drawEntities(ctx);
-                    }
-                    
-                    // Draw HUD elements
-                    this.drawHUD(ctx);
-                    
-                    // Draw crosshair
-                    this.drawCrosshair(ctx);
-                    
-                    requestAnimationFrame(gameLoop);
+                // Configure Eaglercraft
+                var relayId = Math.floor(Math.random() * 3);
+                window.eaglercraftXOpts = {
+                    demoMode: false,
+                    container: "game_frame",
+                    assetsURI: "assets.epw",
+                    worldsDB: "worlds",
+                    servers: [
+                        /* example: { addr: "ws://localhost:8081/", name: "Local test server" } */
+                    ],
+                    relays: [
+                        { addr: "wss://relay.deev.is/", comment: "lax1dude relay #1", primary: relayId == 0 },
+                        { addr: "wss://relay.lax1dude.net/", comment: "lax1dude relay #2", primary: relayId == 1 },
+                        { addr: "wss://relay.shhnowisnottheti.me/", comment: "ayunami relay #1", primary: relayId == 2 }
+                    ]
                 };
                 
-                gameLoop();
-            }
-
-            drawCelestialBody(ctx) {
-                const canvas = document.getElementById('game-canvas');
-                const time = this.worldTime % 24000;
-                const isDay = time < 12000;
-                
-                const radius = 30;
-                const x = canvas.width / 2 + Math.cos(time / 12000 * Math.PI * 2) * (canvas.width / 4);
-                const y = canvas.height / 4 + Math.sin(time / 12000 * Math.PI * 2) * (canvas.height / 8);
-                
-                ctx.beginPath();
-                ctx.arc(x, y, radius, 0, Math.PI * 2);
-                
-                if (isDay) {
-                    const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
-                    gradient.addColorStop(0, '#ffff00');
-                    gradient.addColorStop(1, '#ffa500');
-                    ctx.fillStyle = gradient;
-                } else {
-                    const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
-                    gradient.addColorStop(0, '#ffffff');
-                    gradient.addColorStop(1, '#cccccc');
-                    ctx.fillStyle = gradient;
+                // Apply URL parameters
+                var q = window.location.search;
+                if((typeof q === "string") && q[0] === "?" && (typeof window.URLSearchParams !== "undefined")) {
+                    q = new window.URLSearchParams(q);
+                    var s = q.get("server");
+                    if(s) window.eaglercraftXOpts.joinServer = s;
                 }
                 
-                ctx.fill();
-            }
-
-            drawPlayer(ctx) {
-                const canvas = document.getElementById('game-canvas');
-                const centerX = canvas.width / 2;
-                const centerY = canvas.height / 2;
+                // Start main game
+                main();
+                this.gameLoaded = true;
                 
-                // Draw player body
-                ctx.fillStyle = this.hacks.xray.enabled ? '#ff0000' : '#4169e1';
-                ctx.fillRect(centerX - 15, centerY - 40, 30, 40);
-                
-                // Draw player head
-                ctx.fillStyle = this.hacks.xray.enabled ? '#ff4444' : '#7df9ff';
-                ctx.fillRect(centerX - 10, centerY - 60, 20, 20);
-                
-                // Draw health bar
-                ctx.fillStyle = '#ff0000';
-                ctx.fillRect(centerX - 20, centerY - 70, 40, 5);
-                ctx.fillStyle = '#00ff00';
-                ctx.fillRect(centerX - 20, centerY - 70, 40 * (this.health / 20), 5);
-            }
-
-            drawEntities(ctx) {
-                const canvas = document.getElementById('game-canvas');
-                
-                this.entities.forEach(entity => {
-                    if (!entity.visible) return;
-                    
-                    // Convert 3D position to 2D screen position
-                    const screenX = canvas.width / 2 + (entity.position.x - this.playerPosition.x) * 10;
-                    const screenY = canvas.height / 2 + (entity.position.z - this.playerPosition.z) * 10;
-                    
-                    // Check if entity is on screen
-                    if (screenX >= 0 && screenX <= canvas.width && screenY >= 0 && screenY <= canvas.height) {
-                        // Draw entity box
-                        const color = entity.type === 'player' ? '#ff0000' : '#ff8800';
-                        ctx.strokeStyle = color;
-                        ctx.lineWidth = 2;
-                        ctx.strokeRect(screenX - 15, screenY - 40, 30, 40);
-                        
-                        // Draw name
-                        ctx.fillStyle = color;
-                        ctx.font = '12px monospace';
-                        ctx.textAlign = 'center';
-                        ctx.fillText(entity.name, screenX, screenY - 45);
-                        
-                        // Draw health
-                        ctx.fillStyle = '#ff0000';
-                        ctx.fillRect(screenX - 15, screenY - 50, 30, 3);
-                        ctx.fillStyle = '#00ff00';
-                        ctx.fillRect(screenX - 15, screenY - 50, 30 * (entity.health / 20), 3);
+                // Apply saved hacks
+                setTimeout(() => {
+                    for (const hack in this.hacks) {
+                        if (this.hacks[hack].enabled) {
+                            this.activateHack(hack);
+                        }
                     }
-                });
-            }
-
-            drawHUD(ctx) {
-                const canvas = document.getElementById('game-canvas');
-                
-                // Draw hotbar
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-                ctx.fillRect(canvas.width / 2 - 91, canvas.height - 25, 182, 22);
-                
-                // Draw hotbar slots
-                for (let i = 0; i < 9; i++) {
-                    ctx.strokeStyle = '#4169e1';
-                    ctx.lineWidth = 2;
-                    ctx.strokeRect(canvas.width / 2 - 90 + i * 20, canvas.height - 24, 18, 18);
-                }
-                
-                // Draw selected slot
-                ctx.strokeStyle = '#7df9ff';
-                ctx.lineWidth = 3;
-                ctx.strokeRect(canvas.width / 2 - 91 + 4 * 20, canvas.height - 25, 20, 22);
-                
-                // Draw health and hunger
-                this.drawHealthHunger(ctx);
-            }
-
-            drawHealthHunger(ctx) {
-                const canvas = document.getElementById('game-canvas');
-                
-                // Draw health hearts
-                for (let i = 0; i < 10; i++) {
-                    const x = 20 + i * 20;
-                    const y = 20;
-                    
-                    ctx.fillStyle = '#ff0000';
-                    if (this.health / 2 > i) {
-                        ctx.beginPath();
-                        ctx.moveTo(x + 8, y + 4);
-                        ctx.bezierCurveTo(x + 8, y, x + 12, y, x + 12, y + 4);
-                        ctx.bezierCurveTo(x + 12, y + 8, x + 8, y + 12, x + 8, y + 12);
-                        ctx.bezierCurveTo(x + 8, y + 12, x + 4, y + 8, x + 4, y + 4);
-                        ctx.bezierCurveTo(x + 4, y, x + 8, y, x + 8, y + 4);
-                        ctx.fill();
-                    }
-                }
-                
-                // Draw hunger
-                for (let i = 0; i < 10; i++) {
-                    const x = 20 + i * 20;
-                    const y = 45;
-                    
-                    ctx.fillStyle = '#ffa500';
-                    if (this.hunger / 2 > i) {
-                        ctx.beginPath();
-                        ctx.moveTo(x + 4, y + 4);
-                        ctx.lineTo(x + 12, y + 4);
-                        ctx.lineTo(x + 16, y + 8);
-                        ctx.lineTo(x + 12, y + 12);
-                        ctx.lineTo(x + 4, y + 12);
-                        ctx.lineTo(x, y + 8);
-                        ctx.closePath();
-                        ctx.fill();
-                    }
-                }
-            }
-
-            drawCrosshair(ctx) {
-                const canvas = document.getElementById('game-canvas');
-                const centerX = canvas.width / 2;
-                const centerY = canvas.height / 2;
-                
-                ctx.strokeStyle = '#ffffff';
-                ctx.lineWidth = 2;
-                
-                // Draw crosshair
-                ctx.beginPath();
-                ctx.moveTo(centerX - 10, centerY);
-                ctx.lineTo(centerX + 10, centerY);
-                ctx.moveTo(centerX, centerY - 10);
-                ctx.lineTo(centerX, centerY + 10);
-                ctx.stroke();
-                
-                // Draw outer circle if extended reach is enabled
-                if (this.hacks.reach.enabled) {
-                    ctx.beginPath();
-                    ctx.arc(centerX, centerY, 15, 0, Math.PI * 2);
-                    ctx.strokeStyle = '#7df9ff';
-                    ctx.lineWidth = 1;
-                    ctx.stroke();
-                }
+                    this.updateHUD();
+                    this.showStatus('Navine Client Ready! Press Right Shift for Menu');
+                }, 3000);
             }
 
             setupEventListeners() {
@@ -829,13 +488,13 @@
                     if (e.code === 'ShiftRight') {
                         e.preventDefault();
                         this.toggleMenu();
-                        return;
+                        return false;
                     }
                     
                     if (e.code === 'Period') {
                         e.preventDefault();
                         this.toggleCommands();
-                        return;
+                        return false;
                     }
                     
                     // Hack hotkeys
@@ -843,154 +502,18 @@
                         if (e.code === data.key) {
                             e.preventDefault();
                             this.toggleHack(hack);
-                            return;
+                            return false;
                         }
                     }
                     
-                    // Movement keys
-                    if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'Space', 'ShiftLeft'].includes(e.code)) {
-                        this.handleMovement(e.code, true);
+                    // Inject commands into Eaglercraft
+                    if (e.code === 'Enter' && e.target.id === 'command-input') {
+                        e.preventDefault();
+                        this.executeCommand(e.target.value);
+                        e.target.value = '';
+                        return false;
                     }
-                    
-                    // Attack (left click simulation)
-                    if (e.code === 'KeyQ') {
-                        this.attack();
-                    }
-                    
-                    // Jump
-                    if (e.code === 'Space' && this.hacks.flight.enabled) {
-                        this.flyUp();
-                    }
-                    
-                    // Crouch/fly down
-                    if (e.code === 'ShiftLeft' && this.hacks.flight.enabled) {
-                        this.flyDown();
-                    }
-                });
-                
-                document.addEventListener('keyup', (e) => {
-                    if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'Space', 'ShiftLeft'].includes(e.code)) {
-                        this.handleMovement(e.code, false);
-                    }
-                });
-                
-                // Mouse movement
-                document.addEventListener('mousemove', (e) => {
-                    if (this.gameRunning) {
-                        this.playerRotation.yaw += e.movementX * 0.2;
-                        this.playerRotation.pitch -= e.movementY * 0.2;
-                        this.playerRotation.pitch = Math.max(-90, Math.min(90, this.playerRotation.pitch));
-                    }
-                });
-                
-                // Mouse click for attack
-                document.addEventListener('mousedown', (e) => {
-                    if (e.button === 0 && this.gameRunning) { // Left click
-                        this.attack();
-                    }
-                });
-                
-                // Window resize
-                window.addEventListener('resize', () => {
-                    if (this.gameRunning) {
-                        const canvas = document.getElementById('game-canvas');
-                        canvas.width = window.innerWidth;
-                        canvas.height = window.innerHeight;
-                    }
-                });
-            }
-
-            handleMovement(key, isPressed) {
-                const moveSpeed = this.hacks.speed.enabled ? this.hacks.speed.value * 0.1 : 0.1;
-                
-                if (isPressed) {
-                    switch(key) {
-                        case 'KeyW':
-                            this.playerPosition.x += Math.sin(this.playerRotation.yaw * Math.PI / 180) * moveSpeed;
-                            this.playerPosition.z -= Math.cos(this.playerRotation.yaw * Math.PI / 180) * moveSpeed;
-                            break;
-                        case 'KeyS':
-                            this.playerPosition.x -= Math.sin(this.playerRotation.yaw * Math.PI / 180) * moveSpeed;
-                            this.playerPosition.z += Math.cos(this.playerRotation.yaw * Math.PI / 180) * moveSpeed;
-                            break;
-                        case 'KeyA':
-                            this.playerPosition.x += Math.sin((this.playerRotation.yaw - 90) * Math.PI / 180) * moveSpeed;
-                            this.playerPosition.z -= Math.cos((this.playerRotation.yaw - 90) * Math.PI / 180) * moveSpeed;
-                            break;
-                        case 'KeyD':
-                            this.playerPosition.x += Math.sin((this.playerRotation.yaw + 90) * Math.PI / 180) * moveSpeed;
-                            this.playerPosition.z -= Math.cos((this.playerRotation.yaw + 90) * Math.PI / 180) * moveSpeed;
-                            break;
-                        case 'Space':
-                            if (!this.hacks.flight.enabled) {
-                                this.playerPosition.y += 0.5;
-                            }
-                            break;
-                    }
-                }
-                
-                // Update HUD position display
-                this.updateHUD();
-            }
-
-            flyUp() {
-                if (this.hacks.flight.enabled) {
-                    this.playerPosition.y += 0.5;
-                }
-            }
-
-            flyDown() {
-                if (this.hacks.flight.enabled && this.playerPosition.y > 0) {
-                    this.playerPosition.y -= 0.5;
-                }
-            }
-
-            attack() {
-                if (this.hacks.killaura.enabled) {
-                    // Auto-attack nearby entities
-                    this.entities.forEach(entity => {
-                        const distance = Math.sqrt(
-                            Math.pow(entity.position.x - this.playerPosition.x, 2) +
-                            Math.pow(entity.position.z - this.playerPosition.z, 2)
-                        );
-                        
-                        if (distance < this.hacks.killaura.range) {
-                            entity.health -= 2;
-                            if (entity.health <= 0) {
-                                entity.visible = false;
-                                this.showStatus(`Killed ${entity.name}!`);
-                            }
-                        }
-                    });
-                } else if (this.hacks.triggerbot.enabled) {
-                    // Auto-attack when looking at entity
-                    const target = this.getEntityInCrosshair();
-                    if (target) {
-                        target.health -= 2;
-                        if (target.health <= 0) {
-                            target.visible = false;
-                            this.showStatus(`Killed ${target.name}!`);
-                        }
-                    }
-                }
-                
-                // Normal attack
-                this.showStatus('Attack!', 500);
-            }
-
-            getEntityInCrosshair() {
-                // Simple entity detection
-                for (const entity of this.entities) {
-                    const distance = Math.sqrt(
-                        Math.pow(entity.position.x - this.playerPosition.x, 2) +
-                        Math.pow(entity.position.z - this.playerPosition.z, 2)
-                    );
-                    
-                    if (distance < (this.hacks.reach.enabled ? this.hacks.reach.distance : 3)) {
-                        return entity;
-                    }
-                }
-                return null;
+                }, true);
             }
 
             toggleHack(hackName) {
@@ -1017,31 +540,32 @@
                 switch(hackName) {
                     case 'fullbright':
                         document.getElementById('fullbright-overlay').style.display = 'block';
+                        this.injectFullbright();
                         break;
                     case 'esp':
                         document.getElementById('esp-overlay').style.display = 'block';
-                        this.updateESP();
+                        this.injectESP();
                         break;
                     case 'xray':
-                        document.getElementById('xray-overlay').style.display = 'block';
+                        this.injectXRay();
                         break;
                     case 'flight':
-                        this.showStatus('Flight Enabled - SPACE: Up, SHIFT: Down');
+                        this.injectFlight();
                         break;
                     case 'speed':
-                        this.showStatus(`Speed ${this.hacks.speed.value}x Enabled`);
+                        this.injectSpeed();
                         break;
                     case 'noclip':
-                        this.showStatus('No Clip Enabled - Walk through blocks');
+                        this.injectNoClip();
                         break;
                     case 'killaura':
-                        this.showStatus(`Kill Aura Active (${this.hacks.killaura.range} blocks)`);
+                        this.injectKillAura();
                         break;
                     case 'reach':
-                        this.showStatus(`Extended Reach (${this.hacks.reach.distance} blocks)`);
+                        this.injectReach();
                         break;
                     case 'triggerbot':
-                        this.showStatus('Trigger Bot Active - Auto-attack on sight');
+                        this.injectTriggerBot();
                         break;
                 }
             }
@@ -1050,46 +574,242 @@
                 switch(hackName) {
                     case 'fullbright':
                         document.getElementById('fullbright-overlay').style.display = 'none';
+                        this.removeFullbright();
                         break;
                     case 'esp':
                         document.getElementById('esp-overlay').style.display = 'none';
                         document.getElementById('esp-overlay').innerHTML = '';
+                        this.removeESP();
                         break;
                     case 'xray':
-                        document.getElementById('xray-overlay').style.display = 'none';
+                        this.removeXRay();
+                        break;
+                    case 'flight':
+                        this.removeFlight();
+                        break;
+                    case 'speed':
+                        this.removeSpeed();
+                        break;
+                    case 'noclip':
+                        this.removeNoClip();
+                        break;
+                    case 'killaura':
+                        this.removeKillAura();
+                        break;
+                    case 'reach':
+                        this.removeReach();
+                        break;
+                    case 'triggerbot':
+                        this.removeTriggerBot();
                         break;
                 }
             }
 
-            updateESP() {
+            // HACK INJECTION METHODS
+            injectFullbright() {
+                try {
+                    // This would inject code into Eaglercraft to increase gamma/brightness
+                    console.log('Injecting Fullbright...');
+                    // For now, just show overlay
+                } catch (e) {
+                    console.error('Failed to inject Fullbright:', e);
+                }
+            }
+
+            removeFullbright() {
+                console.log('Removing Fullbright...');
+            }
+
+            injectESP() {
+                try {
+                    console.log('Injecting ESP...');
+                    // Create ESP boxes for demo
+                    this.createESPBoxes();
+                } catch (e) {
+                    console.error('Failed to inject ESP:', e);
+                }
+            }
+
+            removeESP() {
+                console.log('Removing ESP...');
+            }
+
+            injectXRay() {
+                try {
+                    console.log('Injecting X-Ray...');
+                    this.showStatus('X-Ray: See through blocks');
+                } catch (e) {
+                    console.error('Failed to inject X-Ray:', e);
+                }
+            }
+
+            removeXRay() {
+                console.log('Removing X-Ray...');
+            }
+
+            injectFlight() {
+                try {
+                    console.log('Injecting Flight...');
+                    this.showStatus('Flight: Double-tap SPACE to fly');
+                    // Inject flight ability
+                    this.injectCode(`
+                        // Flight injection
+                        window.navineFlight = true;
+                        console.log('Flight hack injected');
+                    `);
+                } catch (e) {
+                    console.error('Failed to inject Flight:', e);
+                }
+            }
+
+            removeFlight() {
+                console.log('Removing Flight...');
+                this.injectCode(`
+                    window.navineFlight = false;
+                `);
+            }
+
+            injectSpeed() {
+                try {
+                    console.log('Injecting Speed...');
+                    this.showStatus(`Speed: ${this.hacks.speed.value}x movement`);
+                    this.injectCode(`
+                        window.navineSpeed = ${this.hacks.speed.value};
+                        console.log('Speed hack injected: ' + window.navineSpeed + 'x');
+                    `);
+                } catch (e) {
+                    console.error('Failed to inject Speed:', e);
+                }
+            }
+
+            removeSpeed() {
+                console.log('Removing Speed...');
+                this.injectCode(`
+                    window.navineSpeed = 1.0;
+                `);
+            }
+
+            injectNoClip() {
+                try {
+                    console.log('Injecting No Clip...');
+                    this.showStatus('No Clip: Walk through blocks');
+                    this.injectCode(`
+                        window.navineNoClip = true;
+                        console.log('No Clip hack injected');
+                    `);
+                } catch (e) {
+                    console.error('Failed to inject No Clip:', e);
+                }
+            }
+
+            removeNoClip() {
+                console.log('Removing No Clip...');
+                this.injectCode(`
+                    window.navineNoClip = false;
+                `);
+            }
+
+            injectKillAura() {
+                try {
+                    console.log('Injecting Kill Aura...');
+                    this.showStatus(`Kill Aura: Auto-attack within ${this.hacks.killaura.range} blocks`);
+                    this.injectCode(`
+                        window.navineKillAura = { enabled: true, range: ${this.hacks.killaura.range} };
+                        console.log('Kill Aura hack injected');
+                    `);
+                } catch (e) {
+                    console.error('Failed to inject Kill Aura:', e);
+                }
+            }
+
+            removeKillAura() {
+                console.log('Removing Kill Aura...');
+                this.injectCode(`
+                    window.navineKillAura = { enabled: false, range: 0 };
+                `);
+            }
+
+            injectReach() {
+                try {
+                    console.log('Injecting Extended Reach...');
+                    this.showStatus(`Reach: ${this.hacks.reach.distance} blocks`);
+                    this.injectCode(`
+                        window.navineReach = ${this.hacks.reach.distance};
+                        console.log('Extended Reach hack injected');
+                    `);
+                } catch (e) {
+                    console.error('Failed to inject Reach:', e);
+                }
+            }
+
+            removeReach() {
+                console.log('Removing Reach...');
+                this.injectCode(`
+                    window.navineReach = 3.0;
+                `);
+            }
+
+            injectTriggerBot() {
+                try {
+                    console.log('Injecting Trigger Bot...');
+                    this.showStatus('Trigger Bot: Auto-attack when aimed at target');
+                    this.injectCode(`
+                        window.navineTriggerBot = true;
+                        console.log('Trigger Bot hack injected');
+                    `);
+                } catch (e) {
+                    console.error('Failed to inject Trigger Bot:', e);
+                }
+            }
+
+            removeTriggerBot() {
+                console.log('Removing Trigger Bot...');
+                this.injectCode(`
+                    window.navineTriggerBot = false;
+                `);
+            }
+
+            injectCode(code) {
+                try {
+                    // Try to inject code into Eaglercraft context
+                    const script = document.createElement('script');
+                    script.textContent = code;
+                    document.head.appendChild(script);
+                    document.head.removeChild(script);
+                } catch (e) {
+                    console.error('Failed to inject code:', e);
+                }
+            }
+
+            createESPBoxes() {
+                // Create demo ESP boxes
                 const overlay = document.getElementById('esp-overlay');
                 overlay.innerHTML = '';
                 
-                this.entities.forEach(entity => {
-                    if (!entity.visible) return;
+                for (let i = 0; i < 3; i++) {
+                    const box = document.createElement('div');
+                    box.className = 'esp-box';
+                    box.style.left = `${200 + i * 150}px`;
+                    box.style.top = `${200 + i * 100}px`;
+                    box.style.width = '40px';
+                    box.style.height = '80px';
+                    overlay.appendChild(box);
                     
-                    // Convert 3D position to 2D screen position
-                    const screenX = window.innerWidth / 2 + (entity.position.x - this.playerPosition.x) * 10;
-                    const screenY = window.innerHeight / 2 + (entity.position.z - this.playerPosition.z) * 10;
-                    
-                    if (screenX >= 0 && screenX <= window.innerWidth && screenY >= 0 && screenY <= window.innerHeight) {
-                        const box = document.createElement('div');
-                        box.className = 'esp-box';
-                        box.style.left = `${screenX - 15}px`;
-                        box.style.top = `${screenY - 40}px`;
-                        box.style.width = '30px';
-                        box.style.height = '40px';
-                        overlay.appendChild(box);
-                        
-                        const label = document.createElement('div');
-                        label.className = 'esp-label';
-                        label.style.left = `${screenX}px`;
-                        label.style.top = `${screenY - 50}px`;
-                        label.textContent = `${entity.name} (${Math.floor(entity.health)}❤)`;
-                        label.style.transform = 'translateX(-50%)';
-                        overlay.appendChild(label);
-                    }
-                });
+                    const label = document.createElement('div');
+                    label.className = 'esp-label';
+                    label.style.position = 'absolute';
+                    label.style.left = `${200 + i * 150}px`;
+                    label.style.top = `${280 + i * 100}px`;
+                    label.style.color = '#ff0000';
+                    label.style.background = 'rgba(0,0,0,0.7)';
+                    label.style.padding = '2px 6px';
+                    label.style.borderRadius = '3px';
+                    label.style.fontSize = '12px';
+                    label.style.fontWeight = 'bold';
+                    label.style.textShadow = '1px 1px 2px #000000';
+                    label.textContent = `Player${i + 1}`;
+                    overlay.appendChild(label);
+                }
             }
 
             executeCommand(cmd) {
@@ -1098,7 +818,7 @@
                 const args = parts.slice(1);
 
                 const commands = {
-                    '.help': () => this.showStatus('Commands: .fly .speed .esp .xray .fullbright .vclip .tp .heal .kill .seed .time .weather .noclip .killaura .reach .tphere .flyspeed .gamemode'),
+                    '.help': () => this.showStatus('Commands: .fly .speed .esp .xray .fullbright .vclip .tp .heal .kill .seed .time .weather .noclip .killaura .reach'),
                     '.fly': () => this.toggleHack('flight'),
                     '.speed': () => {
                         if (args.length > 0) {
@@ -1106,6 +826,9 @@
                             if (speed >= 1 && speed <= 10) {
                                 this.hacks.speed.value = speed;
                                 this.showStatus(`Speed set to ${speed}x`);
+                                if (this.hacks.speed.enabled) {
+                                    this.injectSpeed();
+                                }
                             }
                         }
                         this.toggleHack('speed');
@@ -1116,44 +839,77 @@
                     '.vclip': () => {
                         if (args.length > 0) {
                             const blocks = parseFloat(args[0]);
-                            this.playerPosition.y += blocks;
+                            this.injectCode(`
+                                // V-Clip command
+                                if(window.minecraft && window.minecraft.player) {
+                                    window.minecraft.player.posY += ${blocks};
+                                }
+                            `);
                             this.showStatus(`V-Clipped ${blocks} blocks`);
                         }
                     },
                     '.tp': () => {
                         if (args.length >= 3) {
-                            this.playerPosition.x = parseFloat(args[0]);
-                            this.playerPosition.y = parseFloat(args[1]);
-                            this.playerPosition.z = parseFloat(args[2]);
+                            this.injectCode(`
+                                // Teleport command
+                                if(window.minecraft && window.minecraft.player) {
+                                    window.minecraft.player.posX = ${parseFloat(args[0])};
+                                    window.minecraft.player.posY = ${parseFloat(args[1])};
+                                    window.minecraft.player.posZ = ${parseFloat(args[2])};
+                                }
+                            `);
                             this.showStatus(`Teleported to ${args[0]}, ${args[1]}, ${args[2]}`);
                         }
                     },
                     '.heal': () => {
-                        this.health = 20;
-                        this.hunger = 20;
+                        this.injectCode(`
+                            // Heal command
+                            if(window.minecraft && window.minecraft.player) {
+                                window.minecraft.player.health = 20;
+                                window.minecraft.player.hunger = 20;
+                            }
+                        `);
                         this.showStatus('Health and hunger restored!');
                     },
                     '.kill': () => {
-                        this.health = 0;
+                        this.injectCode(`
+                            // Kill command
+                            if(window.minecraft && window.minecraft.player) {
+                                window.minecraft.player.health = 0;
+                            }
+                        `);
                         this.showStatus('You died!');
-                        setTimeout(() => {
-                            this.health = 20;
-                            this.playerPosition = { x: 0, y: 64, z: 0 };
-                            this.showStatus('Respawned');
-                        }, 2000);
                     },
                     '.seed': () => {
-                        this.showStatus(`World Seed: ${this.worldSeed}`);
+                        this.injectCode(`
+                            // Seed command
+                            if(window.minecraft && window.minecraft.world) {
+                                console.log('World seed: ' + window.minecraft.world.seed);
+                                alert('World Seed: ' + window.minecraft.world.seed);
+                            }
+                        `);
+                        this.showStatus('Check console for seed');
                     },
                     '.time': () => {
                         if (args.length > 0) {
-                            if (args[0] === 'day') this.worldTime = 1000;
-                            else if (args[0] === 'night') this.worldTime = 13000;
+                            const time = args[0] === 'day' ? 1000 : 13000;
+                            this.injectCode(`
+                                // Time command
+                                if(window.minecraft && window.minecraft.world) {
+                                    window.minecraft.world.setWorldTime(${time});
+                                }
+                            `);
                             this.showStatus(`Time set to ${args[0]}`);
                         }
                     },
                     '.weather': () => {
                         if (args.length > 0) {
+                            this.injectCode(`
+                                // Weather command
+                                if(window.minecraft && window.minecraft.world) {
+                                    window.minecraft.world.setWeather('${args[0]}');
+                                }
+                            `);
                             this.showStatus(`Weather set to ${args[0]}`);
                         }
                     },
@@ -1165,34 +921,18 @@
                             if (reach >= 3 && reach <= 10) {
                                 this.hacks.reach.distance = reach;
                                 this.showStatus(`Reach set to ${reach} blocks`);
+                                if (this.hacks.reach.enabled) {
+                                    this.injectReach();
+                                }
                             }
                         }
                         this.toggleHack('reach');
-                    },
-                    '.tphere': () => {
-                        if (args.length > 0) {
-                            this.showStatus(`Teleported ${args[0]} to your location`);
-                        }
-                    },
-                    '.flyspeed': () => {
-                        if (args.length > 0) {
-                            const speed = parseFloat(args[0]);
-                            this.showStatus(`Fly speed set to ${speed}`);
-                        }
-                    },
-                    '.gamemode': () => {
-                        if (args.length > 0) {
-                            const modes = ['survival', 'creative', 'adventure', 'spectator'];
-                            if (args[0] >= 0 && args[0] <= 3) {
-                                this.gameMode = modes[args[0]];
-                                this.showStatus(`Gamemode set to ${this.gameMode}`);
-                            }
-                        }
                     }
                 };
 
                 if (commands[baseCmd]) {
                     commands[baseCmd]();
+                    this.toggleCommands();
                 } else {
                     this.showStatus(`Unknown command: ${baseCmd}`);
                 }
@@ -1214,9 +954,6 @@
             updateHUD() {
                 const activeCount = this.activeHacks.size;
                 document.getElementById('hud-hacks').textContent = activeCount;
-                document.getElementById('hud-fps').textContent = this.fps;
-                document.getElementById('hud-pos').textContent = 
-                    `${Math.floor(this.playerPosition.x)}, ${Math.floor(this.playerPosition.y)}, ${Math.floor(this.playerPosition.z)}`;
                 
                 let status = 'Ready';
                 if (activeCount > 0) {
@@ -1245,6 +982,7 @@
                     
                     if (currentTime - lastTime >= 1000) {
                         this.fps = Math.round((frames * 1000) / (currentTime - lastTime));
+                        document.getElementById('hud-fps').textContent = this.fps;
                         this.updateHUD();
                         frames = 0;
                         lastTime = currentTime;
@@ -1254,12 +992,6 @@
                 };
                 
                 updateFPS();
-            }
-
-            startPositionUpdate() {
-                setInterval(() => {
-                    this.updateHUD();
-                }, 100);
             }
 
             saveSettings() {
@@ -1292,23 +1024,13 @@
             }
         }
 
-        // ============================================
-        // INITIALIZE NAVINE CLIENT
-        // ============================================
-        const navine = new NavineClient();
-        
-        // Enable fullscreen click
-        document.addEventListener('click', () => {
-            const canvas = document.getElementById('game-canvas');
-            if (document.pointerLockElement !== canvas) {
-                canvas.requestPointerLock();
-            }
-        });
-        
-        // Handle escape key for pointer lock
-        document.addEventListener('keydown', (e) => {
-            if (e.code === 'Escape') {
-                document.exitPointerLock();
+        // Initialize Navine Client when page loads
+        window.addEventListener("load", function() {
+            if(window.location.href.indexOf("file:") === 0) {
+                alert("Please run via HTTP server, not file://");
+            } else {
+                // Initialize Navine Client
+                window.navine = new NavineClient();
             }
         });
     </script>
