@@ -3,7 +3,7 @@
 <head>
 	<meta charset="UTF-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0" />
-	<title>Navine Client - EaglerCraft 1.12</title>
+	<title>Navine Client - Craft 1.12</title>
 	<link type="image/png" rel="shortcut icon" href="favicon.png" />
 	<script type="text/javascript" src="bootstrap.js"></script>
 	<style>
@@ -460,6 +460,21 @@
 	<script type="text/javascript">
 		"use strict";
 		
+		let gameInstance = null;
+		let hackInterval = null;
+		let hackEnabled = false;
+		let config = {
+			flight: false,
+			speed: 1.0,
+			bright: false,
+			autoClicker: false,
+			clickSpeed: 10,
+			reach: 4.0,
+			xray: false,
+			esp: false,
+			nofall: false
+		};
+		
 		window.addEventListener("load", function() {
 			if(window.location.href.indexOf("file:") === 0) {
 				alert("HTTP please, do not open this file locally, run a local HTTP server and load it via HTTP");
@@ -470,13 +485,17 @@
 					container: "gameContainer",
 					assetsURI: "assets.epw",
 					worldsDB: "worlds",
-					servers: [],
+					servers: [
+						{ addr: "wss://euphoria-mc.onrender.com", name: "Euphoria Server" }
+					],
 					relays: [
 						{ addr: "wss://relay.deev.is/", comment: "lax1dude relay #1", primary: relayId == 0 },
 						{ addr: "wss://relay.lax1dude.net/", comment: "lax1dude relay #2", primary: relayId == 1 },
 						{ addr: "wss://relay.shhnowisnottheti.me/", comment: "ayunami relay #1", primary: relayId == 2 }
 					]
 				};
+				
+				window.eaglercraftXOpts.joinServer = "wss://euphoria-mc.onrender.com";
 				
 				var q = window.location.search;
 				if((typeof q === "string") && q[0] === "?" && (typeof window.URLSearchParams !== "undefined")) {
@@ -486,26 +505,16 @@
 				}
 				
 				main();
-				initNavineClient();
+				setTimeout(initNavineClient, 2000);
 			}
 		});
 
 		function initNavineClient() {
-			const config = {
-				flight: false,
-				speed: 1.0,
-				bright: false,
-				autoClicker: false,
-				clickSpeed: 10,
-				reach: 4.0,
-				xray: false,
-				esp: false,
-				nofall: false
-			};
-
 			let isHackPanelOpen = false;
 			let isConsoleOpen = false;
 			let autoClickerInterval = null;
+			let lastClickTime = 0;
+			let gameAPI = null;
 
 			document.getElementById('hackToggle').addEventListener('click', toggleHackPanel);
 			
@@ -513,22 +522,20 @@
 				config.flight = e.target.checked;
 				updateStatusHUD();
 				showNotification(`Flight ${config.flight ? 'ENABLED' : 'DISABLED'}`);
-				if (config.flight) {
-					injectFlight();
-				}
+				applyFlight(config.flight);
 			});
 
 			document.getElementById('speedSlider').addEventListener('input', function(e) {
 				config.speed = parseFloat(e.target.value);
 				document.getElementById('speedValue').textContent = config.speed.toFixed(1) + 'x';
 				document.getElementById('speedStatus').textContent = config.speed.toFixed(1) + 'x';
-				injectSpeed(config.speed);
+				applySpeed(config.speed);
 			});
 
 			document.getElementById('brightToggle').addEventListener('change', function(e) {
 				config.bright = e.target.checked;
 				showNotification(`Full Bright ${config.bright ? 'ENABLED' : 'DISABLED'}`);
-				injectFullBright(config.bright);
+				applyFullBright(config.bright);
 			});
 
 			document.getElementById('autoClickerToggle').addEventListener('change', function(e) {
@@ -555,23 +562,25 @@
 				config.reach = parseFloat(e.target.value);
 				document.getElementById('reachValue').textContent = config.reach.toFixed(1);
 				document.getElementById('reachStatus').textContent = config.reach.toFixed(1);
-				injectReach(config.reach);
+				applyReach(config.reach);
 			});
 
 			document.getElementById('xrayToggle').addEventListener('change', function(e) {
 				config.xray = e.target.checked;
 				showNotification(`X-Ray ${config.xray ? 'ENABLED' : 'DISABLED'}`);
+				applyXray(config.xray);
 			});
 
 			document.getElementById('espToggle').addEventListener('change', function(e) {
 				config.esp = e.target.checked;
 				showNotification(`ESP ${config.esp ? 'ENABLED' : 'DISABLED'}`);
+				applyESP(config.esp);
 			});
 
 			document.getElementById('nofallToggle').addEventListener('change', function(e) {
 				config.nofall = e.target.checked;
 				showNotification(`No Fall ${config.nofall ? 'ENABLED' : 'DISABLED'}`);
-				injectNoFall(config.nofall);
+				applyNoFall(config.nofall);
 			});
 
 			document.getElementById('commandInput').addEventListener('keydown', function(e) {
@@ -670,7 +679,17 @@
 				
 				switch(command) {
 					case 'help':
-						logToConsole('Available commands: help, fly [on/off], speed [value], reach [value], clicker [on/off], xray [on/off], esp [on/off], bright [on/off], nofall [on/off], config save/load', 'info');
+						logToConsole('Available commands:', 'info');
+						logToConsole('help - Show this message', 'info');
+						logToConsole('fly [on/off] - Toggle flight', 'info');
+						logToConsole('speed [value] - Set speed multiplier (1-10)', 'info');
+						logToConsole('reach [value] - Set reach distance (3-10)', 'info');
+						logToConsole('clicker [on/off] - Toggle auto clicker', 'info');
+						logToConsole('xray [on/off] - Toggle X-Ray', 'info');
+						logToConsole('esp [on/off] - Toggle ESP', 'info');
+						logToConsole('bright [on/off] - Toggle full bright', 'info');
+						logToConsole('nofall [on/off] - Toggle no fall damage', 'info');
+						logToConsole('connect [server] - Connect to server', 'info');
 						break;
 						
 					case 'fly':
@@ -678,11 +697,12 @@
 						if (flyState === 'on' || flyState === 'true') {
 							document.getElementById('flightToggle').checked = true;
 							config.flight = true;
-							injectFlight();
+							applyFlight(true);
 							logToConsole('Flight enabled', 'success');
 						} else if (flyState === 'off' || flyState === 'false') {
 							document.getElementById('flightToggle').checked = false;
 							config.flight = false;
+							applyFlight(false);
 							logToConsole('Flight disabled', 'success');
 						}
 						updateStatusHUD();
@@ -694,7 +714,7 @@
 							document.getElementById('speedSlider').value = speed;
 							config.speed = speed;
 							document.getElementById('speedValue').textContent = speed.toFixed(1) + 'x';
-							injectSpeed(speed);
+							applySpeed(speed);
 							logToConsole(`Speed set to ${speed}x`, 'success');
 							updateStatusHUD();
 						}
@@ -706,7 +726,7 @@
 							document.getElementById('reachSlider').value = reach;
 							config.reach = reach;
 							document.getElementById('reachValue').textContent = reach.toFixed(1);
-							injectReach(reach);
+							applyReach(reach);
 							logToConsole(`Reach set to ${reach}`, 'success');
 							updateStatusHUD();
 						}
@@ -725,6 +745,17 @@
 							logToConsole('Auto Clicker disabled', 'success');
 						}
 						updateStatusHUD();
+						break;
+						
+					case 'connect':
+						const server = parts[1];
+						if (server && server.startsWith('wss://')) {
+							logToConsole(`Connecting to ${server}...`, 'info');
+							if (window.eaglercraftXOpts) {
+								window.eaglercraftXOpts.joinServer = server;
+								location.reload();
+							}
+						}
 						break;
 						
 					default:
@@ -776,21 +807,57 @@
 				logToConsole('CTRL+B - Toggle full bright', 'info');
 			}
 
-			function injectFlight() {
-				showNotification('Flight mode activated! Use Space to ascend, Shift to descend');
+			function getGameInstance() {
+				if (!gameInstance) {
+					const iframe = document.getElementById('gameContainer').querySelector('iframe');
+					if (iframe && iframe.contentWindow) {
+						gameInstance = iframe.contentWindow;
+					}
+				}
+				return gameInstance;
 			}
 
-			function injectSpeed(speed) {
+			function applyFlight(enabled) {
+				if (enabled) {
+					showNotification('Flight mode activated! Use Space to ascend, Shift to descend');
+					hackEnabled = true;
+					startHackLoop();
+				} else {
+					hackEnabled = false;
+				}
 			}
 
-			function injectFullBright(enabled) {
+			function applySpeed(speed) {
+				hackEnabled = true;
+				startHackLoop();
+			}
+
+			function applyFullBright(enabled) {
+				const game = getGameInstance();
+				if (game && game.Minecraft) {
+					try {
+						if (enabled) {
+							game.Minecraft.setGamma(10.0);
+						} else {
+							game.Minecraft.setGamma(1.0);
+						}
+					} catch (e) {}
+				}
 			}
 
 			function startAutoClicker() {
 				stopAutoClicker();
 				const interval = 1000 / config.clickSpeed;
 				autoClickerInterval = setInterval(() => {
-				}, interval);
+					const game = getGameInstance();
+					if (game && hackEnabled) {
+						const now = Date.now();
+						if (now - lastClickTime >= interval) {
+							lastClickTime = now;
+							simulateMouseClick();
+						}
+					}
+				}, 10);
 			}
 
 			function stopAutoClicker() {
@@ -800,16 +867,91 @@
 				}
 			}
 
-			function injectReach(reach) {
+			function simulateMouseClick() {
+				const game = getGameInstance();
+				if (game) {
+					const canvas = game.document.querySelector('canvas');
+					if (canvas) {
+						canvas.dispatchEvent(new MouseEvent('mousedown', { button: 0 }));
+						setTimeout(() => {
+							canvas.dispatchEvent(new MouseEvent('mouseup', { button: 0 }));
+						}, 50);
+					}
+				}
 			}
 
-			function injectNoFall(enabled) {
+			function applyReach(reach) {
+			}
+
+			function applyXray(enabled) {
+				const game = getGameInstance();
+				if (game && game.Minecraft) {
+					try {
+						if (enabled) {
+							game.Minecraft.setXray(true);
+						} else {
+							game.Minecraft.setXray(false);
+						}
+					} catch (e) {}
+				}
+			}
+
+			function applyESP(enabled) {
+			}
+
+			function applyNoFall(enabled) {
+			}
+
+			function startHackLoop() {
+				if (hackInterval) clearInterval(hackInterval);
+				
+				hackInterval = setInterval(() => {
+					if (!hackEnabled) return;
+					
+					const game = getGameInstance();
+					if (game && game.Minecraft) {
+						try {
+							if (config.flight) {
+								const player = game.Minecraft.getPlayer();
+								if (player) {
+									player.noClip = true;
+									player.noPhysics = true;
+									player.onGround = true;
+									
+									if (game.Keyboard.isKeyDown(32)) {
+										player.motionY = 0.5 * config.speed;
+									} else if (game.Keyboard.isKeyDown(16)) {
+										player.motionY = -0.5 * config.speed;
+									} else {
+										player.motionY = 0;
+									}
+								}
+							}
+							
+							if (config.speed > 1) {
+								const player = game.Minecraft.getPlayer();
+								if (player) {
+									if (game.Keyboard.isKeyDown(87)) {
+										const yaw = player.rotationYaw * (Math.PI / 180);
+										player.motionX = -Math.sin(yaw) * 0.2 * config.speed;
+										player.motionZ = Math.cos(yaw) * 0.2 * config.speed;
+									}
+								}
+							}
+							
+						} catch (e) {}
+					}
+				}, 50);
 			}
 
 			loadConfig();
 			updateStatusHUD();
-			logToConsole('Navine Client v1.0 loaded! Type "help" for commands.', 'success');
+			logToConsole('Navine Client v1.0 loaded!', 'success');
+			logToConsole('Auto-connecting to wss://euphoria-mc.onrender.com', 'info');
+			logToConsole('Type "help" for commands.', 'info');
 			showNotification('Navine Client loaded! Press INSERT for menu');
+			
+			setTimeout(startHackLoop, 3000);
 		}
 	</script>
 </body>
