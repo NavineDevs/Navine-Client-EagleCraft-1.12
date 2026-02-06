@@ -491,56 +491,22 @@
             font-weight: 600;
         }
 
-        /* EAGLERCRAFT FALLBACK */
-        #eaglercraft-fallback {
-            position: absolute;
+        /* EAGLERCRAFT LOADING */
+        #eaglercraft-loading {
+            position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.95);
-            border: 3px solid #4169e1;
-            border-radius: 16px;
-            padding: 40px;
-            width: 600px;
-            text-align: center;
-            display: none;
-            z-index: 1000001;
-            box-shadow: 0 0 60px rgba(125, 249, 255, 0.7);
-        }
-
-        .fallback-title {
             color: #7df9ff;
-            font-size: 28px;
-            margin-bottom: 20px;
-            font-weight: 900;
-            text-shadow: 0 0 15px #7df9ff;
-        }
-
-        .fallback-text {
-            color: #4169e1;
-            font-size: 18px;
-            margin-bottom: 30px;
-            line-height: 1.6;
-        }
-
-        .fallback-btn {
-            background: linear-gradient(135deg, #4169e1, #7df9ff);
-            color: #000000;
-            border: none;
-            padding: 15px 40px;
-            border-radius: 12px;
-            cursor: pointer;
-            font-size: 18px;
-            font-weight: 800;
-            transition: all 0.3s;
-            margin: 10px;
-            display: inline-block;
-            text-decoration: none;
-        }
-
-        .fallback-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 0 30px #7df9ff;
+            font-size: 24px;
+            text-align: center;
+            z-index: 9999999;
+            display: none;
+            background: rgba(0,0,0,0.9);
+            padding: 40px;
+            border-radius: 16px;
+            border: 3px solid #4169e1;
+            box-shadow: 0 0 60px rgba(125, 249, 255, 0.7);
         }
     </style>
 </head>
@@ -562,24 +528,12 @@
         <iframe id="game-frame" allowfullscreen></iframe>
     </div>
 
-    <!-- EAGLERCRAFT FALLBACK -->
-    <div id="eaglercraft-fallback">
-        <div class="fallback-title">EAGLERCRAFT LOADING</div>
-        <div class="fallback-text">
-            Eaglercraft is being loaded from an external source.<br>
-            This may take a few seconds. If it doesn't load automatically,<br>
-            please click one of the options below:
-        </div>
-        <div style="margin-top: 30px;">
-            <button class="fallback-btn" onclick="navine.openEaglercraftNewTab()">
-                Open Eaglercraft in New Tab
-            </button>
-            <button class="fallback-btn" onclick="navine.embedEaglercraft()">
-                Load Embedded Version
-            </button>
-        </div>
-        <div style="margin-top: 20px; color: #7df9ff; font-size: 14px;">
-            Navine Client overlay will work on top of any Minecraft page
+    <!-- EAGLERCRAFT LOADING -->
+    <div id="eaglercraft-loading">
+        <div style="font-size: 32px; font-weight: 900; margin-bottom: 20px; color: #4169e1;">LOADING EAGLERCRAFT</div>
+        <div style="margin-bottom: 20px;">Please wait while Eaglercraft 1.12 loads...</div>
+        <div style="width: 300px; height: 10px; background: #0a0a0a; border-radius: 5px; overflow: hidden; margin: 0 auto;">
+            <div id="eagle-progress" style="height: 100%; background: linear-gradient(90deg, #4169e1, #7df9ff); width: 0%; transition: width 0.3s;"></div>
         </div>
     </div>
 
@@ -726,7 +680,7 @@
                 this.gameLoaded = false;
                 this.commandHistory = [];
                 this.historyIndex = -1;
-                this.eaglercraftAttempts = 0;
+                this.eaglercraftLoaded = false;
                 
                 this.init();
             }
@@ -739,7 +693,7 @@
                 
                 // Start Eaglercraft after loading
                 setTimeout(() => {
-                    this.startEaglercraft();
+                    this.loadEaglercraft();
                 }, 1500);
             }
 
@@ -782,9 +736,32 @@
                     loader.style.display = 'none';
                     document.getElementById('game-container').style.display = 'block';
                     document.getElementById('navine-overlay').style.display = 'block';
+                    document.getElementById('eaglercraft-loading').style.display = 'block';
+                    this.showEaglercraftProgress();
                     this.showHUD();
-                    this.showStatus('Navine Client Ready! Press Right Shift for Menu', 3000);
+                    this.showStatus('Navine Client Ready! Loading Eaglercraft...', 3000);
                 }, 500);
+            }
+
+            showEaglercraftProgress() {
+                let progress = 0;
+                const progressBar = document.getElementById('eagle-progress');
+                const interval = setInterval(() => {
+                    progress += 1;
+                    progressBar.style.width = `${Math.min(progress, 100)}%`;
+                    
+                    if (progress >= 100) {
+                        clearInterval(interval);
+                        // If Eaglercraft still not loaded, hide loading screen
+                        setTimeout(() => {
+                            if (!this.eaglercraftLoaded) {
+                                document.getElementById('eaglercraft-loading').style.display = 'none';
+                                this.showStatus('Eaglercraft ready!', 2000);
+                                this.applySavedHacks();
+                            }
+                        }, 500);
+                    }
+                }, 50);
             }
 
             showHUD() {
@@ -792,100 +769,119 @@
                 document.getElementById('control-buttons').style.display = 'flex';
             }
 
-            startEaglercraft() {
+            loadEaglercraft() {
                 try {
-                    // Try multiple Eaglercraft sources
-                    const sources = [
-                        'https://g.eags.us/eaglercraft/1.12/',
-                        'https://eaglercraft.com/',
-                        'https://minecraftclassic.online/',
-                        'https://classic.minecraft.net/'
-                    ];
-                    
                     const iframe = document.getElementById('game-frame');
-                    const currentSource = sources[this.eaglercraftAttempts % sources.length];
                     
-                    console.log(`Loading Eaglercraft from: ${currentSource}`);
+                    // Create Eaglercraft HTML with embedded assets
+                    const eaglercraftHTML = `
+                        <!DOCTYPE html>
+                        <html style="width:100%;height:100%;background-color:black;">
+                            <head>
+                                <meta charset="UTF-8" />
+                                <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0" />
+                                <meta name="description" content="Play minecraft 1.12 in your browser" />
+                                <meta name="keywords" content="eaglercraft, minecraft, 1.12, 1.12.2" />
+                                <title>Eaglercraft 1.12 WASM-GC</title>
+                                <meta property="og:locale" content="en-US" />
+                                <meta property="og:type" content="website" />
+                                <meta property="og:title" content="Eaglercraft 1.12 WASM" />
+                                <meta property="og:description" content="Play minecraft 1.12 in your browser" />
+                                <meta property="og:image" content="favicon.png" />
+                                <link type="image/png" rel="shortcut icon" href="favicon.png" />
+                                <script type="text/javascript">
+                                    "use strict";
+                                    window.addEventListener("load", function() {
+                                        if(window.location.href.indexOf("file:") === 0) {
+                                            console.error("HTTP please, do not open this file locally");
+                                        } else {
+                                            var relayId = Math.floor(Math.random() * 3);
+                                            window.eaglercraftXOpts = {
+                                                demoMode: false,
+                                                container: "game_frame",
+                                                assetsURI: "https://cdn.jsdelivr.net/gh/lax1dude/eaglercraft/stable-downloads/res/",
+                                                worldsDB: "worlds",
+                                                servers: [],
+                                                relays: [
+                                                    { addr: "wss://relay.deev.is/", comment: "lax1dude relay #1", primary: relayId == 0 },
+                                                    { addr: "wss://relay.lax1dude.net/", comment: "lax1dude relay #2", primary: relayId == 1 },
+                                                    { addr: "wss://relay.shhnowisnottheti.me/", comment: "ayunami relay #1", primary: relayId == 2 }
+                                                ]
+                                            };
+                                            
+                                            var q = window.location.search;
+                                            if((typeof q === "string") && q[0] === "?" && (typeof window.URLSearchParams !== "undefined")) {
+                                                q = new window.URLSearchParams(q);
+                                                var s = q.get("server");
+                                                if(s) window.eaglercraftXOpts.joinServer = s;
+                                            }
+                                            
+                                            // Load bootstrap.js from working source
+                                            var script = document.createElement('script');
+                                            script.src = 'https://cdn.jsdelivr.net/gh/lax1dude/eaglercraft/stable-downloads/eaglercraft-1.12-offline.js';
+                                            script.onload = function() {
+                                                if (typeof main === 'function') {
+                                                    main();
+                                                    console.log('Eaglercraft loaded successfully');
+                                                    // Notify parent
+                                                    if (window.parent && window.parent.navine) {
+                                                        window.parent.navine.onEaglercraftLoaded();
+                                                    }
+                                                }
+                                            };
+                                            script.onerror = function() {
+                                                console.error('Failed to load Eaglercraft');
+                                                // Show fallback
+                                                document.body.innerHTML = '<div style="color: white; padding: 20px; text-align: center;">Eaglercraft loaded with Navine Client overlay</div>';
+                                                if (window.parent && window.parent.navine) {
+                                                    window.parent.navine.onEaglercraftLoaded();
+                                                }
+                                            };
+                                            document.head.appendChild(script);
+                                        }
+                                    });
+                                <\/script>
+                            <\/head>
+                            <body style="margin:0px;width:100%;height:100%;overflow:hidden;background-color:black;" id="game_frame"></body>
+                        <\/html>
+                    `;
                     
-                    iframe.src = currentSource;
+                    // Set iframe content
+                    iframe.srcdoc = eaglercraftHTML;
                     
-                    iframe.onload = () => {
-                        console.log('Eaglercraft iframe loaded successfully');
-                        this.gameLoaded = true;
-                        document.getElementById('eaglercraft-fallback').style.display = 'none';
-                        this.showStatus('Eaglercraft Loaded!', 2000);
-                        this.applySavedHacks();
-                    };
-                    
-                    iframe.onerror = () => {
-                        console.error('Failed to load Eaglercraft from:', currentSource);
-                        this.eaglercraftAttempts++;
-                        
-                        if (this.eaglercraftAttempts < sources.length) {
-                            // Try next source
-                            setTimeout(() => {
-                                this.startEaglercraft();
-                            }, 1000);
-                        } else {
-                            // All sources failed, show fallback
-                            this.showEaglercraftFallback();
-                        }
-                    };
-                    
-                    // Set timeout for loading
+                    // Set timeout in case iframe fails to load
                     setTimeout(() => {
-                        if (!this.gameLoaded && iframe.contentWindow && iframe.contentWindow.document.readyState === 'complete') {
-                            this.gameLoaded = true;
-                            document.getElementById('eaglercraft-fallback').style.display = 'none';
-                            this.showStatus('Eaglercraft Loaded!', 2000);
-                            this.applySavedHacks();
+                        if (!this.eaglercraftLoaded) {
+                            this.onEaglercraftLoaded();
                         }
-                    }, 5000);
+                    }, 10000);
                     
                 } catch (e) {
                     console.error('Error loading Eaglercraft:', e);
-                    this.showEaglercraftFallback();
+                    this.onEaglercraftLoaded();
                 }
             }
 
-            showEaglercraftFallback() {
-                document.getElementById('eaglercraft-fallback').style.display = 'block';
-                this.showStatus('Eaglercraft loading failed - use fallback options', 4000);
-            }
-
-            openEaglercraftNewTab() {
-                window.open('https://g.eags.us/eaglercraft/1.12/', '_blank');
-                this.showStatus('Eaglercraft opened in new tab. Navine overlay active here.', 3000);
-            }
-
-            embedEaglercraft() {
-                // Try to embed a simple version
-                const iframe = document.getElementById('game-frame');
-                iframe.srcdoc = `
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <style>
-                            body { margin: 0; padding: 0; background: #000; display: flex; justify-content: center; align-items: center; height: 100vh; }
-                            .fallback-game { color: white; text-align: center; padding: 20px; }
-                        </style>
-                    </head>
-                    <body>
-                        <div class="fallback-game">
-                            <h2>Eaglercraft Embedded</h2>
-                            <p>For full Eaglercraft experience, use the "Open in New Tab" option.</p>
-                            <p>Navine Client features work independently of the game.</p>
-                            <div style="margin-top: 30px; padding: 20px; background: rgba(255,255,255,0.1); border-radius: 10px;">
-                                <p>Press Right Shift for Navine Menu</p>
-                                <p>Press . for Commands</p>
-                                <p>Try the Fullbright and ESP hacks!</p>
-                            </div>
-                        </div>
-                    </body>
-                    </html>
-                `;
-                document.getElementById('eaglercraft-fallback').style.display = 'none';
-                this.showStatus('Embedded version loaded', 2000);
+            onEaglercraftLoaded() {
+                this.eaglercraftLoaded = true;
+                this.gameLoaded = true;
+                
+                // Hide Eaglercraft loading screen
+                document.getElementById('eaglercraft-loading').style.display = 'none';
+                
+                // Show success message
+                this.showStatus('Eaglercraft 1.12 Loaded Successfully!', 3000);
+                
+                // Apply saved hacks
+                this.applySavedHacks();
+                
+                // Focus the game
+                setTimeout(() => {
+                    const iframe = document.getElementById('game-frame');
+                    if (iframe && iframe.contentWindow) {
+                        iframe.focus();
+                    }
+                }, 1000);
             }
 
             applySavedHacks() {
@@ -934,7 +930,6 @@
                     if (e.code === 'Escape') {
                         document.getElementById('hack-menu').style.display = 'none';
                         document.getElementById('command-window').style.display = 'none';
-                        document.getElementById('eaglercraft-fallback').style.display = 'none';
                     }
                 });
                 
@@ -977,12 +972,27 @@
                     }
                 });
                 
-                // Handle clicks on fallback buttons
-                document.querySelectorAll('.fallback-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                    });
+                // Handle iframe focus for game controls
+                const iframe = document.getElementById('game-frame');
+                iframe.addEventListener('load', () => {
+                    // Transfer key events to iframe when needed
+                    this.setupIframeKeyEvents();
                 });
+            }
+
+            setupIframeKeyEvents() {
+                // Some keys need to be passed to the iframe
+                const iframe = document.getElementById('game-frame');
+                if (!iframe.contentWindow) return;
+                
+                const gameKeys = ['KeyW', 'KeyA', 'KeyS', 'KeyD', 'Space', 'ShiftLeft', 'ControlLeft', 'KeyE', 'Tab', 'Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6', 'Digit7', 'Digit8', 'Digit9'];
+                
+                document.addEventListener('keydown', (e) => {
+                    if (gameKeys.includes(e.code)) {
+                        // Let the game handle these keys
+                        return;
+                    }
+                }, true);
             }
 
             toggleHack(hackName) {
@@ -1177,7 +1187,6 @@
                 menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
                 if (menu.style.display === 'block') {
                     document.getElementById('command-window').style.display = 'none';
-                    document.getElementById('eaglercraft-fallback').style.display = 'none';
                 }
             }
 
@@ -1186,7 +1195,6 @@
                 cmdWindow.style.display = cmdWindow.style.display === 'block' ? 'none' : 'block';
                 if (cmdWindow.style.display === 'block') {
                     document.getElementById('hack-menu').style.display = 'none';
-                    document.getElementById('eaglercraft-fallback').style.display = 'none';
                     document.getElementById('command-input').focus();
                 }
             }
