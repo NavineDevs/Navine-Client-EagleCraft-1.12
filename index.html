@@ -1,50 +1,56 @@
 <!DOCTYPE html>
-<html lang="und" style="width:100%;height:100%;background-color:black;">
+<html lang="en" style="width:100%;height:100%;background-color:black;">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Eaglercraft 1.12.2 Offline Download">
     <meta name="keywords" content="eaglercraft, minecraft">
     <title>Navine Client Eaglercraft 1.12.2</title>
+
     <meta property="og:locale" content="en-US">
     <meta property="og:type" content="website">
     <meta property="og:title" content="Navine Client Eaglercraft 1.12.2">
-    <meta property="og:description" content="this file is not a website, whoever uploaded it to this URL is a dumbass">
-    <script type="text/javascript">
+    <meta property="og:description" content="this file is not a website">
+
+    <script>
         "use strict";
-        var relayId = Math.floor(Math.random() * 3);
 
-        // %%%%%%%%% launch options %%%%%%%%%%%%
+        const relayId = Math.floor(Math.random() * 3);
 
+        // Launch options
         window.eaglercraftXOpts = {
             container: "game_frame",
-			assetsURI: "assets.epw",
+            assetsURI: "assets.epw",
             worldsDB: "worlds",
+
             relays: [
                 { addr: "wss://relay.deev.is/", comment: "lax1dude relay #1", primary: relayId === 0 },
                 { addr: "wss://relay.lax1dude.net/", comment: "lax1dude relay #2", primary: relayId === 1 },
                 { addr: "wss://relay.shhnowisnottheti.me/", comment: "ayunami relay #1", primary: relayId === 2 }
             ],
+
             servers: [
-                { addr: "wss://"+window.location.origin.replace("https://","")+"/", name: "'Euphoria Games'" },
+                { addr: "wss://" + window.location.origin.replace("https://", "") + "/", name: "Euphoria Games" }
             ],
+
             checkRelaysForUpdates: true
         };
 
-        // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-		
-        var q = window.location.search;
-					if((typeof q === "string") && q[0] === "?" && (typeof window.URLSearchParams !== "undefined")) {
-						q = new window.URLSearchParams(q);
-						var s = q.get("server");
-						if(s) window.eaglercraftXOpts.joinServer = s;
-					}
-					
-					main();
-					
-				}
-			});
-		</script>
-	</head>
-	<body style="margin:0px;width:100%;height:100%;overflow:hidden;background-color:black;" id="game_frame"></body>
+        // Handle ?server= query parameter
+        const params = new URLSearchParams(window.location.search);
+        const server = params.get("server");
+        if (server) {
+            window.eaglercraftXOpts.joinServer = server;
+        }
+
+        // Make sure main() exists before calling
+        if (typeof main === "function") {
+            main();
+        } else {
+            console.warn("main() is not defined. Did you forget to include the game script?");
+        }
+    </script>
+</head>
+
+<body id="game_frame" style="margin:0;width:100%;height:100%;overflow:hidden;background:black;"></body>
 </html>
