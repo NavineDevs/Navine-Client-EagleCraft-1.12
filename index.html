@@ -1,47 +1,48 @@
 <!DOCTYPE html>
 <html lang="en" style="width:100%;height:100%;background:black;">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Eaglercraft 1.12.2 Offline">
-    <meta name="keywords" content="eaglercraft, minecraft">
-    <title>Navine Client Eaglercraft 1.12.2</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Eaglercraft 1.12.2 Offline">
+<meta name="keywords" content="eaglercraft, minecraft">
+<title>Navine Client Eaglercraft 1.12.2</title>
 
-    <meta property="og:locale" content="en-US">
-    <meta property="og:type" content="website">
-    <meta property="og:title" content="Navine Client Eaglercraft 1.12.2">
-    <meta property="og:description" content="Offline Eaglercraft client">
+<meta property="og:locale" content="en-US">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Navine Client Eaglercraft 1.12.2">
+<meta property="og:description" content="Offline Eaglercraft client">
 
-    <script src="eaglercraft.js"></script>
+<script src="classes.js"></script>
+<script src="bootstrap.js"></script>
 
-    <script>
-        "use strict";
+<script>
+"use strict";
 
-        const relayId = Math.floor(Math.random() * 3);
+const relayId = Math.floor(Math.random() * 3);
 
-        window.eaglercraftXOpts = {
-            container: "game_frame",
-            assetsURI: "assets.epw",
-            worldsDB: "worlds",
-            relays: [
-                { addr: "wss://relay.deev.is/", primary: relayId === 0 },
-                { addr: "wss://relay.lax1dude.net/", primary: relayId === 1 },
-                { addr: "wss://relay.shhnowisnottheti.me/", primary: relayId === 2 }
-            ],
-            servers: [
-                { addr: "wss://" + window.location.host + "/", name: "Euphoria Games" }
-            ],
-            checkRelaysForUpdates: true
-        };
+window.eaglercraftXOpts = {
+container: "game_frame",
+assetsURI: "assets.epw",
+worldsDB: "worlds",
+relays: [
+{ addr: "wss://relay.deev.is/", primary: relayId === 0 },
+{ addr: "wss://relay.lax1dude.net/", primary: relayId === 1 },
+{ addr: "wss://relay.shhnowisnottheti.me/", primary: relayId === 2 }
+],
+servers: [
+{ addr: "wss://" + window.location.host + "/", name: "Euphoria Games" }
+],
+checkRelaysForUpdates: true
+};
 
-        const params = new URLSearchParams(window.location.search);
-        const server = params.get("server");
-        if (server) window.eaglercraftXOpts.joinServer = server;
+const params = new URLSearchParams(window.location.search);
+const server = params.get("server");
+if (server) window.eaglercraftXOpts.joinServer = server;
 
-        window.addEventListener("load", () => {
-            if (typeof main === "function") main();
-        });
-    </script>
+window.addEventListener("load", () => {
+if (typeof main === "function") main();
+});
+</script>
 </head>
 <body id="game_frame" style="margin:0;width:100%;height:100%;overflow:hidden;background:black;"></body>
 </html>
